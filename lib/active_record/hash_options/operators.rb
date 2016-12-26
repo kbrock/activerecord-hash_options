@@ -8,6 +8,7 @@ module ActiveRecord
     class LTE < GenericOp; end
 
     class LIKE < GenericOp; end
+    class NOT_LIKE < GenericOp; end
     class ILIKE < GenericOp; end
   end
 end

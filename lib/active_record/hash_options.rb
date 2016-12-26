@@ -19,6 +19,7 @@ module ActiveRecord
         mod.predicate_builder.register_handler(GTE, proc { |column, op| Arel::Nodes::GreaterThanOrEqual.new(column, op.expression) })
         mod.predicate_builder.register_handler(LTE, proc { |column, op| Arel::Nodes::LessThanOrEqual.new(column, op.expression) })
         mod.predicate_builder.register_handler(LIKE, proc { |column, op| Arel::Nodes::Matches.new(column, Arel::Nodes.build_quoted(op.expression, column), nil, true) })
+        mod.predicate_builder.register_handler(NOT_LIKE, proc { |column, op| Arel::Nodes::DoesNotMatch.new(column, Arel::Nodes.build_quoted(op.expression, column), nil, true) })
         # for postgres:
         mod.predicate_builder.register_handler(ILIKE, proc { |column, op| Arel::Nodes::Matches.new(column, Arel::Nodes.build_quoted(op.expression, column), nil, false) })
       end
