@@ -24,28 +24,36 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
     assert_equal Table1.where(:value => gt(10)), [big]
   end
 
-  # def test_lt
-  #   Table1.destroy_all
-  #   Table1.create(:name => "small", :value => 1)
-  #   big = Table1.create(:name => "big", :value => 100)
+  def test_gt
+    Table1.destroy_all
+    small = Table1.create(:name => "small", :value => 1)
+    Table1.create(:name => "big", :value => 100)
 
-  #   assert_equal Table1.big_values, [big]
-  # end
+    assert_equal Table1.where(:value => lt(10)), [small]
+  end
 
   def test_ilike
     Table1.destroy_all
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "Big", :value => 100)
 
-    assert_equal Table1.big_iname, [big]
+    assert_equal Table1.where(:name => ilike('%big%')), [big]
+  end
+
+  def test_like
+    Table1.destroy_all
+    Table1.create(:name => "small", :value => 1)
+    big = Table1.create(:name => "big", :value => 100)
+
+    assert_equal Table1.where(:name => like('%big%')), [big]
   end
 
   # doesn't work for sqlite
-  # def test_like
+  # def test_like_case
   #   Table1.destroy_all
   #   Table1.create(:name => "Big", :value => 1)
   #   big = Table1.create(:name => "big", :value => 100)
 
-  #   assert_equal Table1.big_name, [big]
+  #   assert_equal Table1.where(:name => ilike('%big%')), [big]
   # end
 end
