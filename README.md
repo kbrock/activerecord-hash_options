@@ -2,6 +2,7 @@
 
 This extends the hash options passed into ActiveRecord `where`.
 
+Thanks to the example from [codesnik](https://gist.github.com/codesnik/2ebba1940c05b08b17f9)
 
 ## Installation
 
