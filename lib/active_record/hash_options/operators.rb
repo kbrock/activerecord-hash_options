@@ -10,5 +10,6 @@ module ActiveRecord
     class LIKE < GenericOp; end
     class NOT_LIKE < GenericOp; end
     class ILIKE < GenericOp; end
+    class NEGATE < GenericOp; end
   end
 end
