@@ -48,6 +48,14 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
     assert_equal Table1.where(:name => like('%big%')), [big]
   end
 
+  def test_not_like
+    Table1.destroy_all
+    Table1.create(:name => "small", :value => 1)
+    big = Table1.create(:name => "big", :value => 100)
+
+    assert_equal Table1.where(:name => not_like('%small%')), [big]
+  end
+
   # doesn't work for sqlite
   # def test_like_case
   #   Table1.destroy_all
