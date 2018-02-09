@@ -15,7 +15,9 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
     assert_equal Table1.big_values, [big]
   end
 
-  # gt available through include helpers
+  # number tests
+
+  # gt available through include helpers (line 4)
   def test_gt
     Table1.destroy_all
     Table1.create(:name => "small", :value => 1)
@@ -24,13 +26,15 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
     assert_equal Table1.where(:value => gt(10)), [big]
   end
 
-  def test_gt
+  def test_lt
     Table1.destroy_all
     small = Table1.create(:name => "small", :value => 1)
     Table1.create(:name => "big", :value => 100)
 
     assert_equal Table1.where(:value => lt(10)), [small]
   end
+
+  # like tests
 
   def test_ilike
     Table1.destroy_all
@@ -63,6 +67,32 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
 
     assert_equal Table1.where(:name => not_like('%small%')), [big]
   end
+
+  def test_starts_with
+    Table1.destroy_all
+    Table1.create(:name => "small", :value => 1)
+    big = Table1.create(:name => "big", :value => 100)
+
+    assert_equal Table1.where(:name => starts_with('b')), [big]
+  end
+
+  def test_ends_with
+    Table1.destroy_all
+    Table1.create(:name => "small", :value => 1)
+    big = Table1.create(:name => "big", :value => 100)
+
+    assert_equal Table1.where(:name => ends_with('g')), [big]
+  end
+
+  def test_contains
+    Table1.destroy_all
+    Table1.create(:name => "small", :value => 1)
+    big = Table1.create(:name => "big", :value => 100)
+
+    assert_equal Table1.where(:name => contains('i')), [big]
+  end
+
+  # compound tests
 
   def test_compound_ilike_case
     Table1.destroy_all
