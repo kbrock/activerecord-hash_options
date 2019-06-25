@@ -14,17 +14,17 @@ module ActiveRecord
 
     def self.register_my_handler(mod)
       if mod < ActiveRecord::Base && mod.kind_of?(Class)
-        mod.predicate_builder.register_handler(GT, proc { |column, op| Arel::Nodes::GreaterThan.new(column, op.expression) })
-        mod.predicate_builder.register_handler(LT, proc { |column, op| Arel::Nodes::LessThan.new(column, op.expression) })
-        mod.predicate_builder.register_handler(GTE, proc { |column, op| Arel::Nodes::GreaterThanOrEqual.new(column, op.expression) })
-        mod.predicate_builder.register_handler(LTE, proc { |column, op| Arel::Nodes::LessThanOrEqual.new(column, op.expression) })
-        mod.predicate_builder.register_handler(LIKE, proc { |column, op| Arel::Nodes::Matches.new(column, Arel::Nodes.build_quoted(op.expression, column), nil, true) })
-        mod.predicate_builder.register_handler(NOT_LIKE, proc { |column, op| Arel::Nodes::DoesNotMatch.new(column, Arel::Nodes.build_quoted(op.expression, column), nil, true) })
+        mod.predicate_builder.register_handler(GT, GT.arel_proc)
+        mod.predicate_builder.register_handler(LT, LT.arel_proc)
+        mod.predicate_builder.register_handler(GTE, GTE.arel_proc)
+        mod.predicate_builder.register_handler(LTE, LTE.arel_proc)
+        mod.predicate_builder.register_handler(LIKE, LIKE.arel_proc)
+        mod.predicate_builder.register_handler(NOT_LIKE, NOT_LIKE.arel_proc)
         # for postgres:
-        mod.predicate_builder.register_handler(ILIKE, proc { |column, op| Arel::Nodes::Matches.new(column, Arel::Nodes.build_quoted(op.expression, column), nil, false) })
+        mod.predicate_builder.register_handler(ILIKE, ILIKE.arel_proc)
 
         # NOTE: currently not using GenericOp for regexp
-        mod.predicate_builder.register_handler(Regexp, proc { |column, op|  Arel::Nodes::Regexp.new(column, op, !!(op.options && Regexp::IGNORECASE))})
+        mod.predicate_builder.register_handler(Regexp, REGEXP.arel_proc)
       end
     end
   end
