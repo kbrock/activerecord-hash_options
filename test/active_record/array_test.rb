@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class ActiveRecord::HashOptionsTest < Minitest::Test
+class ActiveRecord::ArrayTest < Minitest::Test
   include ActiveRecord::HashOptions::Helpers
 
   def test_that_it_has_a_version_number
@@ -8,6 +8,7 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
   end
 
   def test_scope_gt
+    skip("need to test on relations")
     Table1.destroy_all
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "big", :value => 100)
@@ -23,7 +24,7 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.where(:value => gt(10)), [big]
+    assert_equal Table1.all.to_a.where(:value => gt(10)), [big]
   end
 
   def test_lt
@@ -31,7 +32,7 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
     small = Table1.create(:name => "small", :value => 1)
     Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.where(:value => lt(10)), [small]
+    assert_equal Table1.all.to_a.where(:value => lt(10)), [small]
   end
 
   # like tests
@@ -41,7 +42,7 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "Big", :value => 100)
 
-    assert_equal Table1.where(:name => ilike('%big%')), [big]
+    assert_equal Table1.all.to_a.where(:name => ilike('%big%')), [big]
   end
 
   def test_ilike_case
@@ -49,7 +50,7 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
     big1 = Table1.create(:name => "Big", :value => 1)
     big2 = Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.where(:name => ilike('%big%')).order(:name), [big1, big2]
+    assert_equal Table1.all.to_a.where(:name => ilike('%big%')).sort_by(&:name), [big1, big2]
   end
 
   def test_like
@@ -57,7 +58,7 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.where(:name => like('%big%')), [big]
+    assert_equal Table1.all.to_a.where(:name => like('%big%')), [big]
   end
 
   def test_not_like
@@ -65,14 +66,13 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.where(:name => not_like('%small%')), [big]
+    assert_equal Table1.all.to_a.where(:name => not_like('%small%')), [big]
   end
 
   # postgres only
 
 
   def test_regexp
-    skip "sqlite has no db support for regexp"
     Table1.destroy_all
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "big", :value => 100)
@@ -90,7 +90,7 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.where(:name => starts_with('b')), [big]
+    assert_equal Table1.all.to_a.where(:name => starts_with('b')), [big]
   end
 
   def test_ends_with
@@ -98,7 +98,7 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.where(:name => ends_with('g')), [big]
+    assert_equal Table1.all.to_a.where(:name => ends_with('g')), [big]
   end
 
   def test_contains
@@ -106,7 +106,7 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.where(:name => contains('i')), [big]
+    assert_equal Table1.all.to_a.where(:name => contains('i')), [big]
   end
 
   # compound tests
@@ -116,14 +116,15 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
     big = Table1.create(:name => "Big", :value => 1)
     Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.where(:name => ilike('%big%'), :value => lte(10)), [big]
+    assert_equal Table1.all.to_a.where(:name => ilike('%big%'), :value => lte(10)), [big]
   end
 
   def test_not_compound
+    skip("where.not is not implemented yet for arrays")
     Table1.destroy_all
     big = Table1.create(:name => "Big", :value => 1)
     Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.where.not(:name => ilike('%small%'), :value => gte(10)), [big]
+    assert_equal Table1.all.to_a.where.not(:name => ilike('%small%'), :value => gte(10)), [big]
   end
 end

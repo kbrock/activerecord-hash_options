@@ -30,3 +30,23 @@ module ActiveRecord
     end
   end
 end
+
+class Array
+  def where(options)
+    select do |rec|
+      options.all? do |name, value|
+        actual_val = rec.send(name)
+        case value
+        when Regexp
+          actual_val =~ value
+        when Array
+          value.include?(actual_val)
+        when ActiveRecord::HashOptions::GenericOp
+          value.call(actual_val)
+        else # NilClass, String, Integer
+          actual_val == value
+        end
+      end
+    end
+  end
+end
