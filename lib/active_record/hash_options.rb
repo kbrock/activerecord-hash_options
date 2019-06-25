@@ -22,6 +22,9 @@ module ActiveRecord
         mod.predicate_builder.register_handler(NOT_LIKE, proc { |column, op| Arel::Nodes::DoesNotMatch.new(column, Arel::Nodes.build_quoted(op.expression, column), nil, true) })
         # for postgres:
         mod.predicate_builder.register_handler(ILIKE, proc { |column, op| Arel::Nodes::Matches.new(column, Arel::Nodes.build_quoted(op.expression, column), nil, false) })
+
+        # NOTE: currently not using GenericOp for regexp
+        mod.predicate_builder.register_handler(Regexp, proc { |column, op|  Arel::Nodes::Regexp.new(column, op, !!(op.options && Regexp::IGNORECASE))})
       end
     end
   end

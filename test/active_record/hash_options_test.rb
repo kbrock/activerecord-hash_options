@@ -68,6 +68,21 @@ class ActiveRecord::HashOptionsTest < Minitest::Test
     assert_equal Table1.where(:name => not_like('%small%')), [big]
   end
 
+  # postgres only
+
+
+  def test_regexp
+    skip "no db support for regexp"
+    Table1.destroy_all
+    Table1.create(:name => "small", :value => 1)
+    big = Table1.create(:name => "big", :value => 100)
+
+    assert_equal Table1.where(:name => /bi.*/), [big]
+  end
+
+
+  # modified like entries
+
   def test_starts_with
     Table1.destroy_all
     Table1.create(:name => "small", :value => 1)
