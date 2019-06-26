@@ -23,8 +23,9 @@ module ActiveRecord
         # for postgres:
         mod.predicate_builder.register_handler(ILIKE, ILIKE.arel_proc)
 
-        # NOTE: currently not using GenericOp for regexp
+        # NOTE: Probably want Regexp over REGEXP (e.g.: where(:name => /value/i))
         mod.predicate_builder.register_handler(Regexp, REGEXP.arel_proc)
+        mod.predicate_builder.register_handler(REGEXP, REGEXP.arel_proc)
       end
     end
   end
