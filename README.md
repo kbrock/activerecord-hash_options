@@ -28,6 +28,14 @@ Person.where(:name => like('Smith%'))
 Person.where(:age => gte(21))
 ```
 
+The operations also work with arrays
+
+```ruby
+Person.all.to_a.where(:name => like('Smith%'))
+
+Person.all.to_a.where(:age => gte(21))
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
