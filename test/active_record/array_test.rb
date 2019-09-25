@@ -131,17 +131,16 @@ class ActiveRecord::ArrayTest < Minitest::Test
   end
 
   def test_not_compound
-    skip("where.not is not implemented yet for arrays")
     Table1.destroy_all
     big = Table1.create(:name => "Big", :value => 1)
     Table1.create(:name => "big", :value => 100)
 
-    assert_equal filter(Table1.all, :name => ilike('%small%'), :value => gte(10)), [big]
+    assert_equal filter(Table1.all, {:name => ilike('%small%'), :value => gte(10)}, true), [big]
   end
 
   private
 
-  def filter(array, conditions)
-    ActiveRecord::HashOptions.filter(array.to_a, conditions)
+  def filter(array, conditions, negate = false)
+    ActiveRecord::HashOptions.filter(array.to_a, conditions, negate)
   end
 end

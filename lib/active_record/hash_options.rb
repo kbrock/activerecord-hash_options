@@ -30,23 +30,27 @@ module ActiveRecord
       end
     end
 
-    def self.filter(scope_or_array, conditions)
+    def self.filter(scope_or_array, conditions, negate = false)
       if scope_or_array.kind_of?(Array)
-        filter_array(scope_or_array, conditions)
+        filter_array(scope_or_array, conditions, negate)
       else
-        filter_scope(scope_or_array, conditions)
+        filter_scope(scope_or_array, conditions, negate)
       end
     end
 
-    def self.filter_scope(scope, conditions)
-      scope.where(conditions)
+    def self.filter_scope(scope, conditions, negate)
+      if negate
+        scope.where.not(conditions)
+      else
+        scope.where(conditions)
+      end
     end
 
-    def self.filter_array(array, conditions)
+    def self.filter_array(array, conditions, negate)
       array.select do |rec|
         conditions.all? do |name, value|
           actual_val = rec.send(name)
-          case value
+          col_value = case value
           when Regexp
             actual_val =~ value
           when Array
@@ -56,6 +60,7 @@ module ActiveRecord
           else # NilClass, String, Integer
             actual_val == value
           end
+          negate ? !col_value : col_value
         end
       end
     end
