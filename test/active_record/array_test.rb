@@ -24,7 +24,7 @@ class ActiveRecord::ArrayTest < Minitest::Test
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.all.to_a.where(:value => gt(10)), [big]
+    assert_equal filter(Table1.all, :value => gt(10)), [big]
   end
 
   def test_lt
@@ -32,7 +32,7 @@ class ActiveRecord::ArrayTest < Minitest::Test
     small = Table1.create(:name => "small", :value => 1)
     Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.all.to_a.where(:value => lt(10)), [small]
+    assert_equal filter(Table1.all, :value => lt(10)), [small]
   end
 
   # case insensitive tests
@@ -43,7 +43,7 @@ class ActiveRecord::ArrayTest < Minitest::Test
     big = Table1.create(:name => "big", :value => 2)
     big2 = Table1.create(:name => "BIG", :value => 100)
 
-    assert_equal Table1.all.to_a.where(:name => insensitive('big')).sort_by(&:value), [big, big2]
+    assert_equal filter(Table1.all, :name => insensitive('big')).sort_by(&:value), [big, big2]
   end
 
   # like tests
@@ -53,7 +53,7 @@ class ActiveRecord::ArrayTest < Minitest::Test
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "Big", :value => 100)
 
-    assert_equal Table1.all.to_a.where(:name => ilike('%big%')), [big]
+    assert_equal filter(Table1.all, :name => ilike('%big%')), [big]
   end
 
   def test_ilike_case
@@ -61,7 +61,7 @@ class ActiveRecord::ArrayTest < Minitest::Test
     big1 = Table1.create(:name => "Big", :value => 1)
     big2 = Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.all.to_a.where(:name => ilike('%big%')).sort_by(&:name), [big1, big2]
+    assert_equal filter(Table1.all, :name => ilike('%big%')).sort_by(&:name), [big1, big2]
   end
 
   def test_like
@@ -69,7 +69,7 @@ class ActiveRecord::ArrayTest < Minitest::Test
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.all.to_a.where(:name => like('%big%')), [big]
+    assert_equal filter(Table1.all, :name => like('%big%')), [big]
   end
 
   def test_not_like
@@ -77,7 +77,7 @@ class ActiveRecord::ArrayTest < Minitest::Test
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.all.to_a.where(:name => not_like('%small%')), [big]
+    assert_equal filter(Table1.all, :name => not_like('%small%')), [big]
   end
 
   # postgres only
@@ -88,9 +88,9 @@ class ActiveRecord::ArrayTest < Minitest::Test
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.all.to_a.where(:name => /^bi.*/), [big]
-    assert_equal Table1.all.to_a.where(:name => /^BI.*/), []
-    assert_equal Table1.all.to_a.where(:name => /^BI.*/i), [big]
+    assert_equal filter(Table1.all, :name => /^bi.*/), [big]
+    assert_equal filter(Table1.all, :name => /^BI.*/), []
+    assert_equal filter(Table1.all, :name => /^BI.*/i), [big]
   end
 
 
@@ -101,7 +101,7 @@ class ActiveRecord::ArrayTest < Minitest::Test
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.all.to_a.where(:name => starts_with('b')), [big]
+    assert_equal filter(Table1.all, :name => starts_with('b')), [big]
   end
 
   def test_ends_with
@@ -109,7 +109,7 @@ class ActiveRecord::ArrayTest < Minitest::Test
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.all.to_a.where(:name => ends_with('g')), [big]
+    assert_equal filter(Table1.all, :name => ends_with('g')), [big]
   end
 
   def test_contains
@@ -117,7 +117,7 @@ class ActiveRecord::ArrayTest < Minitest::Test
     Table1.create(:name => "small", :value => 1)
     big = Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.all.to_a.where(:name => contains('i')), [big]
+    assert_equal filter(Table1.all, :name => contains('i')), [big]
   end
 
   # compound tests
@@ -127,7 +127,7 @@ class ActiveRecord::ArrayTest < Minitest::Test
     big = Table1.create(:name => "Big", :value => 1)
     Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.all.to_a.where(:name => ilike('%big%'), :value => lte(10)), [big]
+    assert_equal filter(Table1.all, :name => ilike('%big%'), :value => lte(10)), [big]
   end
 
   def test_not_compound
@@ -136,6 +136,12 @@ class ActiveRecord::ArrayTest < Minitest::Test
     big = Table1.create(:name => "Big", :value => 1)
     Table1.create(:name => "big", :value => 100)
 
-    assert_equal Table1.all.to_a.where.not(:name => ilike('%small%'), :value => gte(10)), [big]
+    assert_equal filter(Table1.all, :name => ilike('%small%'), :value => gte(10)), [big]
+  end
+
+  private
+
+  def filter(array, options)
+    ActiveRecord::HashOptions.filter(array.to_a, options)
   end
 end

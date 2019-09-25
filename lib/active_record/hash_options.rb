@@ -29,23 +29,33 @@ module ActiveRecord
         mod.predicate_builder.register_handler(REGEXP, REGEXP.arel_proc)
       end
     end
-  end
-end
 
-class Array
-  def where(options)
-    select do |rec|
-      options.all? do |name, value|
-        actual_val = rec.send(name)
-        case value
-        when Regexp
-          actual_val =~ value
-        when Array
-          value.include?(actual_val)
-        when ActiveRecord::HashOptions::GenericOp
-          value.call(actual_val)
-        else # NilClass, String, Integer
-          actual_val == value
+    def self.filter(scope_or_array, query)
+      if scope_or_array.kind_of?(Array)
+        filter_array(scope_or_array, query)
+      else
+        filter_scope(scope_or_array, query)
+      end
+    end
+
+    def self.filter_scope(scope, options)
+      scope.where(options)
+    end
+
+    def self.filter_array(array, options)
+      array.select do |rec|
+        options.all? do |name, value|
+          actual_val = rec.send(name)
+          case value
+          when Regexp
+            actual_val =~ value
+          when Array
+            value.include?(actual_val)
+          when ActiveRecord::HashOptions::GenericOp
+            value.call(actual_val)
+          else # NilClass, String, Integer
+            actual_val == value
+          end
         end
       end
     end
