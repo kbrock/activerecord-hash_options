@@ -6,6 +6,8 @@ module ActiveRecord
       def gte(val); ActiveRecord::HashOptions::GTE.new(val); end
       def lte(val); ActiveRecord::HashOptions::LTE.new(val); end
 
+      def insensitive(val); ActiveRecord::HashOptions::INSENSITIVE.new(val); end
+
       def starts_with(val) ; ActiveRecord::HashOptions::LIKE.new("#{val}%"); end
       def ends_with(val) ; ActiveRecord::HashOptions::LIKE.new("%#{val}"); end
       def contains(val) ; ActiveRecord::HashOptions::LIKE.new("%#{val}%"); end

@@ -42,6 +42,20 @@ module ActiveRecord
       end
     end
 
+
+    class INSENSITIVE < GenericOp
+      def self.arel_proc
+        proc do |column, op|
+          lower_column = Arel::Nodes::NamedFunction.new("LOWER", [column])
+          Arel::Nodes::Equality.new(lower_column, Arel::Nodes.build_quoted(op.expression.downcase, column))
+        end
+      end
+
+      def call(val)
+        val&.downcase == expression&.downcase
+      end
+    end
+
     class LIKE < GenericOp
       def self.arel_proc
         proc { |column, op| Arel::Nodes::Matches.new(column, Arel::Nodes.build_quoted(op.expression, column), nil, true) }
