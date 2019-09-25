@@ -30,21 +30,21 @@ module ActiveRecord
       end
     end
 
-    def self.filter(scope_or_array, query)
+    def self.filter(scope_or_array, conditions)
       if scope_or_array.kind_of?(Array)
-        filter_array(scope_or_array, query)
+        filter_array(scope_or_array, conditions)
       else
-        filter_scope(scope_or_array, query)
+        filter_scope(scope_or_array, conditions)
       end
     end
 
-    def self.filter_scope(scope, options)
-      scope.where(options)
+    def self.filter_scope(scope, conditions)
+      scope.where(conditions)
     end
 
-    def self.filter_array(array, options)
+    def self.filter_array(array, conditions)
       array.select do |rec|
-        options.all? do |name, value|
+        conditions.all? do |name, value|
           actual_val = rec.send(name)
           case value
           when Regexp

@@ -141,7 +141,7 @@ class ActiveRecord::ArrayTest < Minitest::Test
 
   private
 
-  def filter(array, options)
-    ActiveRecord::HashOptions.filter(array.to_a, options)
+  def filter(array, conditions)
+    ActiveRecord::HashOptions.filter(array.to_a, conditions)
   end
 end
