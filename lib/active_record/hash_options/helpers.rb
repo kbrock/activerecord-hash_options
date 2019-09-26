@@ -7,6 +7,7 @@ module ActiveRecord
       def gte(val); ActiveRecord::HashOptions::GTE.new(val); end
       def lte(val); ActiveRecord::HashOptions::LTE.new(val); end
 
+      # string
       def insensitive(val); ActiveRecord::HashOptions::INSENSITIVE.new(val); end
 
       def starts_with(val) ; ActiveRecord::HashOptions::LIKE.new("#{val}%"); end
