@@ -3,20 +3,6 @@ require 'test_helper'
 class ActiveRecord::HashOptionsTest < Minitest::Test
   include ActiveRecord::HashOptions::Helpers
 
-  # postgres only
-
-
-  def test_regexp
-    skip "sqlite has no db support for regexp"
-    Table1.destroy_all
-    Table1.create(:name => "small", :value => 1)
-    big = Table1.create(:name => "big", :value => 100)
-
-    assert_equal Table1.all.to_a.where(:name => /^bi.*/), [big]
-    assert_equal Table1.all.to_a.where(:name => /^BI.*/), []
-    assert_equal Table1.all.to_a.where(:name => /^BI.*/i), [big]
-  end
-
   # compound tests
 
   def test_compound_ilike_case_direct

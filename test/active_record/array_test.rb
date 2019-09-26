@@ -2,18 +2,6 @@ require 'test_helper'
 
 class ActiveRecord::ArrayTest < Minitest::Test
   include ActiveRecord::HashOptions::Helpers
-  # postgres only
-
-
-  def test_regexp
-    Table1.destroy_all
-    Table1.create(:name => "small", :value => 1)
-    big = Table1.create(:name => "big", :value => 100)
-
-    assert_equal filter(Table1.all, :name => /^bi.*/), [big]
-    assert_equal filter(Table1.all, :name => /^BI.*/), []
-    assert_equal filter(Table1.all, :name => /^BI.*/i), [big]
-  end
 
   # compound tests
 

@@ -75,11 +75,22 @@ RSpec.describe ActiveRecord::HashOptions do
     end
   end
 
+  shared_examples "regexp comparable" do
+    it "compares with regexp" do
+      skip("db does not support regexps") unless supports_regexp?
+
+      expect(filter(collection, :name => /^bi.*/)).to eq([big])
+      expect(filter(collection, :name => /^Bi.*/)).to eq([])
+      expect(filter(collection, :name => /^Bi.*/i)).to eq([big, big2])
+    end
+  end
+
   describe "Array" do
     let(:collection) { Table1.all.to_a }
 
     it_should_behave_like "numeric comparable"
     it_should_behave_like "string comparable"
+    it_should_behave_like "regexp comparable"
   end
 
   describe "Scope" do
@@ -88,6 +99,11 @@ RSpec.describe ActiveRecord::HashOptions do
     it_should_behave_like "scope comparable"
     it_should_behave_like "numeric comparable"
     it_should_behave_like "string comparable"
+    it_should_behave_like "regexp comparable"
+  end
+
+  def supports_regexp?
+    array_test? || ENV["DB"] == "pg"
   end
 
   # sqlite is not case sensitive
