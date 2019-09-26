@@ -17,8 +17,16 @@ RSpec.describe ActiveRecord::HashOptions do
       expect(filter(collection, :value => gt(10))).to eq([big2])
     end
 
+    it "compares with gte" do
+      expect(filter(collection, :value => gte(10))).to match_array([big, big2])
+    end
+
     it "compares with lt" do
       expect(filter(collection, :value => lt(10))).to eq([small])
+    end
+
+    it "compares with lte" do
+      expect(filter(collection, :value => lte(10))).to match_array([small, big])
     end
 
     it "compares with range" do
