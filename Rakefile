@@ -1,4 +1,12 @@
 require "bundler/gem_tasks"
+require "rspec/core/rake_task"
+
+RSpec::Core::RakeTask.new(:spec) do |t|
+  t.ruby_opts = %w[-w]
+end
+
+task :rspec => :spec
+
 require "rake/testtask"
 
 Rake::TestTask.new(:test) do |t|
@@ -7,4 +15,4 @@ Rake::TestTask.new(:test) do |t|
   t.test_files = FileList['test/**/*_test.rb']
 end
 
-task :default => :test
+task :default => [:test, :spec]
