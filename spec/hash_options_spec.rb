@@ -5,6 +5,7 @@ RSpec.describe ActiveRecord::HashOptions do
   let!(:small) { Table1.create(:name => "small", :value => 1) }
   let!(:big)   { Table1.create(:name => "big", :value => 10) }
   let!(:big2)  { Table1.create(:name => "BIG", :value => 100) }
+  let!(:bad)   { Table1.create(:name => nil, :value => nil) }
 
   shared_examples "scope comparable" do
     it "supports scopes with comparisons" do
@@ -30,7 +31,12 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with range" do
-      expect(filter(collection, :value => 5..99)).to eq([big])
+      expect(filter(collection, :value => 5..100)).to eq([big, big2])
+      expect(filter(collection, :value => 5...100)).to eq([big])
+    end
+
+    it "compares with null" do
+      expect(filter(collection, :value => nil)).to eq([bad])
     end
   end
 
