@@ -7,11 +7,15 @@ RSpec.describe ActiveRecord::HashOptions do
   let!(:big2)  { Table1.create(:name => "BIG", :value => 100) }
   let!(:bad)   { Table1.create(:name => nil, :value => nil) }
 
+  ########## scopes embedded in the model ##########
+
   shared_examples "scope comparable" do
     it "supports scopes with comparisons" do
       expect(collection.big_values).to match_array([big2])
     end
   end
+
+  ########## numeric comparisons ##########
 
   shared_examples "numeric comparable" do
     it "compares with gt" do
@@ -40,6 +44,8 @@ RSpec.describe ActiveRecord::HashOptions do
     end
   end
 
+  ########## string comparisons ##########
+
   shared_examples "string comparable" do
     it "compares with gt" do
       expect(filter(collection, :name => gt("big"))).to eq([small])
@@ -67,19 +73,9 @@ RSpec.describe ActiveRecord::HashOptions do
       expect(filter(collection, :name => nil)).to eq([bad])
     end
 
-    # null
-
-    it "compares with null" do
-      expect(filter(collection, :name => nil)).to eq([bad])
-    end
-
-    # insensitivity
-
     it "compares with insensitivity" do
       expect(filter(collection, :name => insensitive('Big'))).to match_array([big, big2])
     end
-
-    # like
 
     it "compares with ilike" do
       expect(filter(collection, :name => ilike('%big%'))).to match_array([big, big2])
@@ -96,8 +92,6 @@ RSpec.describe ActiveRecord::HashOptions do
     it "compares with not_like" do
       expect(filter(collection, :name => not_like('%small%'))).to eq([big, big2])
     end
-
-    # modified like entries
 
     it "compares with starts_with" do
       if case_sensitive?
@@ -124,6 +118,8 @@ RSpec.describe ActiveRecord::HashOptions do
     end
   end
 
+  ########## string regular expressions ##########
+
   shared_examples "regexp comparable" do
     it "compares with regexp" do
       skip("db does not support regexps") unless supports_regexp?
@@ -134,6 +130,8 @@ RSpec.describe ActiveRecord::HashOptions do
     end
   end
 
+  ########## compound expressions ##########
+
   shared_examples "compound comparable" do
     it "compares with compound_ilike_case" do
       expect(filter(collection, :name => ilike('%big%'), :value => lte(10))).to eq([big])
@@ -143,6 +141,9 @@ RSpec.describe ActiveRecord::HashOptions do
       expect(filter(collection, {:name => ilike('%small%'), :value => gte(10)}, false)).to eq([big])
     end
   end
+
+
+  ############################## Base tests ##############################
 
   describe "Array" do
     let(:collection) { Table1.all.to_a }
@@ -161,11 +162,14 @@ RSpec.describe ActiveRecord::HashOptions do
     it_should_behave_like "regexp comparable"
   end
 
+  private
+
+  # pg and arrays support regular expressions
   def supports_regexp?
     array_test? || ENV["DB"] == "pg"
   end
 
-  # sqlite is not case sensitive
+  # sqlite is not case sensitive, pg on ubunto is not case sensitive, pg on mac is case sensitive
   def case_sensitive?
     array_test?
   end

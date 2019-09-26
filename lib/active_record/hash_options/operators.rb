@@ -1,7 +1,9 @@
 module ActiveRecord
   module HashOptions
+    # Operator contains logic for producing arel for the database and acts as a lambda for ruby
     class GenericOp
       attr_accessor :expression, :expression2
+
       def initialize(expression, expression2 = nil)
         @expression = expression
         @expression2 = expression2
@@ -56,7 +58,6 @@ module ActiveRecord
       end
     end
 
-
     class INSENSITIVE < GenericOp
       def self.arel_proc
         proc do |column, op|
@@ -70,6 +71,8 @@ module ActiveRecord
       end
     end
 
+    # Ruby doesn't have like, so I converted regex to like best I could
+    # We could also do the reverse for database operations
     class LIKE < GenericOp
       def self.arel_proc
         proc { |column, op| Arel::Nodes::Matches.new(column, GenericOp.quote(op.expression, column), nil, true) }
@@ -85,6 +88,7 @@ module ActiveRecord
       # convert % => .*, _ => .
       # convert ^.*abc$ => abc$
       # convert ^abc.*$ => ^abc
+      # @param extra ilike passes in Regexp::IGNORECASE
       def like_to_regex(lk, extra = nil)
         exp = lk.gsub(/([.*^$])/) {"[#{$1}]"} # escape special characters
         exp = "^#{exp}$".gsub("%", '.*').gsub("_", ".").gsub(/^\.\*/, '').gsub(/\.\*$/, '')
@@ -102,8 +106,6 @@ module ActiveRecord
         val && val !~ expression2
       end
     end
-
-    # for postgres:
 
     class ILIKE < LIKE
       def self.arel_proc
