@@ -3,34 +3,6 @@ require 'test_helper'
 class ActiveRecord::ArrayTest < Minitest::Test
   include ActiveRecord::HashOptions::Helpers
 
-  def test_scope_gt
-    skip("need to test on relations")
-    Table1.destroy_all
-    Table1.create(:name => "small", :value => 1)
-    big = Table1.create(:name => "big", :value => 100)
-
-    assert_equal Table1.big_values, [big]
-  end
-
-  # number tests
-
-  # gt available through include helpers (line 4)
-  def test_gt
-    Table1.destroy_all
-    Table1.create(:name => "small", :value => 1)
-    big = Table1.create(:name => "big", :value => 100)
-
-    assert_equal filter(Table1.all, :value => gt(10)), [big]
-  end
-
-  def test_lt
-    Table1.destroy_all
-    small = Table1.create(:name => "small", :value => 1)
-    Table1.create(:name => "big", :value => 100)
-
-    assert_equal filter(Table1.all, :value => lt(10)), [small]
-  end
-
   # case insensitive tests
 
   def test_insensitive
