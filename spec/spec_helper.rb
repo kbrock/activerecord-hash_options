@@ -52,7 +52,7 @@ end
 MyTestDatabase.setup
 ActiveRecord::Migration.new.create_table :table1s do |t|
   t.string  :name
-  t.integer :value
+  t.integer :value, :null => true
 end
 
 class Table1 < ActiveRecord::Base

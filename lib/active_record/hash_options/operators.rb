@@ -1,10 +1,24 @@
 module ActiveRecord
   module HashOptions
-    GenericOp = Struct.new(:expression, :expression2)
+    class GenericOp
+      attr_accessor :expression, :expression2
+      def initialize(expression, expression2 = nil)
+        @expression = expression
+        @expression2 = expression2
+      end
+
+      def self.quote(op_expression, column)
+        if op_expression.kind_of?(String)
+          Arel::Nodes.build_quoted(op_expression, column)
+        else
+          op_expression
+        end
+      end
+    end
 
     class GT < GenericOp
       def self.arel_proc
-        proc { |column, op| Arel::Nodes::GreaterThan.new(column, op.expression) }
+        proc { |column, op| Arel::Nodes::GreaterThan.new(column, GenericOp.quote(op.expression, column)) }
       end
 
       def call(val)
@@ -14,7 +28,7 @@ module ActiveRecord
 
     class LT < GenericOp
       def self.arel_proc
-        proc { |column, op| Arel::Nodes::LessThan.new(column, op.expression) }
+        proc { |column, op| Arel::Nodes::LessThan.new(column, GenericOp.quote(op.expression, column)) }
       end
 
       def call(val)
@@ -24,7 +38,7 @@ module ActiveRecord
 
     class GTE < GenericOp
       def self.arel_proc
-        proc { |column, op| Arel::Nodes::GreaterThanOrEqual.new(column, op.expression) }
+        proc { |column, op| Arel::Nodes::GreaterThanOrEqual.new(column, GenericOp.quote(op.expression, column)) }
       end
 
       def call(val)
@@ -34,7 +48,7 @@ module ActiveRecord
 
     class LTE < GenericOp
       def self.arel_proc
-        proc { |column, op| Arel::Nodes::LessThanOrEqual.new(column, op.expression) }
+        proc { |column, op| Arel::Nodes::LessThanOrEqual.new(column, GenericOp.quote(op.expression, column)) }
       end
 
       def call(val)
@@ -47,7 +61,7 @@ module ActiveRecord
       def self.arel_proc
         proc do |column, op|
           lower_column = Arel::Nodes::NamedFunction.new("LOWER", [column])
-          Arel::Nodes::Equality.new(lower_column, Arel::Nodes.build_quoted(op.expression.downcase, column))
+          Arel::Nodes::Equality.new(lower_column, GenericOp.quote(op.expression.downcase, column))
         end
       end
 
@@ -58,7 +72,7 @@ module ActiveRecord
 
     class LIKE < GenericOp
       def self.arel_proc
-        proc { |column, op| Arel::Nodes::Matches.new(column, Arel::Nodes.build_quoted(op.expression, column), nil, true) }
+        proc { |column, op| Arel::Nodes::Matches.new(column, GenericOp.quote(op.expression, column), nil, true) }
       end
 
       def call(val)
@@ -80,7 +94,7 @@ module ActiveRecord
 
     class NOT_LIKE < LIKE
       def self.arel_proc
-        proc { |column, op| Arel::Nodes::DoesNotMatch.new(column, Arel::Nodes.build_quoted(op.expression, column), nil, true) }
+        proc { |column, op| Arel::Nodes::DoesNotMatch.new(column, GenericOp.quote(op.expression, column), nil, true) }
       end
 
       def call(val)
@@ -93,7 +107,7 @@ module ActiveRecord
 
     class ILIKE < LIKE
       def self.arel_proc
-        proc { |column, op| Arel::Nodes::Matches.new(column, Arel::Nodes.build_quoted(op.expression, column), nil, false) }
+        proc { |column, op| Arel::Nodes::Matches.new(column, GenericOp.quote(op.expression, column), nil, false) }
       end
 
       def like_to_regex(lk)
