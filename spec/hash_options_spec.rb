@@ -20,6 +20,10 @@ RSpec.describe ActiveRecord::HashOptions do
     it "compares with lt" do
       expect(filter(collection, :value => lt(10))).to eq([small])
     end
+
+    it "compares with range" do
+      expect(filter(collection, :value => 5..99)).to eq([big])
+    end
   end
 
   shared_examples "string comparable" do
