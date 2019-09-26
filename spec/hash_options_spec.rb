@@ -85,6 +85,16 @@ RSpec.describe ActiveRecord::HashOptions do
     end
   end
 
+  shared_examples "compound comparable" do
+    it "compares with compound_ilike_case" do
+      expect(filter(collection, :name => ilike('%big%'), :value => lte(10))).to eq([big])
+    end
+
+    it "compares with not_compound" do
+      expect(filter(collection, {:name => ilike('%small%'), :value => gte(10)}, false)).to eq([big])
+    end
+  end
+
   describe "Array" do
     let(:collection) { Table1.all.to_a }
 
