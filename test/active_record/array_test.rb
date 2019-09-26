@@ -3,10 +3,6 @@ require 'test_helper'
 class ActiveRecord::ArrayTest < Minitest::Test
   include ActiveRecord::HashOptions::Helpers
 
-  def test_that_it_has_a_version_number
-    refute_nil ::ActiveRecord::HashOptions::VERSION
-  end
-
   def test_scope_gt
     skip("need to test on relations")
     Table1.destroy_all
