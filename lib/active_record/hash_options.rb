@@ -24,6 +24,7 @@ module ActiveRecord
         mod.predicate_builder.register_handler(INSENSITIVE, INSENSITIVE.arel_proc)
         mod.predicate_builder.register_handler(LIKE, LIKE.arel_proc)
         mod.predicate_builder.register_handler(NOT_LIKE, NOT_LIKE.arel_proc)
+        mod.predicate_builder.register_handler(NEQ, NEQ.arel_proc)
         # for postgres:
         mod.predicate_builder.register_handler(ILIKE, ILIKE.arel_proc)
 

@@ -40,6 +40,14 @@ RSpec.describe ActiveRecord::HashOptions do
       expect(filter(collection, :value => lte(10))).to match_array([small, big])
     end
 
+    it "compares with neq" do
+      expect(filter(collection, :value => neq(10))).to eq([small, big2])
+    end
+
+    it "compares with neq nil" do
+      expect(filter(collection, :value => neq(nil))).to match_array([small, big, big2])
+    end
+
     it "compares with range" do
       expect(filter(collection, :value => 5..100)).to match_array([big, big2])
       expect(filter(collection, :value => 5...100)).to eq([big])
@@ -99,7 +107,15 @@ RSpec.describe ActiveRecord::HashOptions do
       end
     end
 
-    it "compares with lte upper" do
+    it "compares with neq" do
+      expect(filter(collection, :name => neq("big"))).to eq([small, big2])
+    end
+
+    it "compares with neq nil" do
+      expect(filter(collection, :name => neq(nil))).to match_array([small, big, big2])
+    end
+
+   it "compares with lte upper" do
       if linux_pg? || mysql?
         expect(filter(collection, :name => lte("BIG"))).to match_array([big, big2])
       else

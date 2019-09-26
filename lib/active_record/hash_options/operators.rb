@@ -59,6 +59,16 @@ module ActiveRecord
       end
     end
 
+    class NEQ < GenericOp
+      def self.arel_proc
+        proc { |column, op| Arel::Nodes::NotEqual.new(column, GenericOp.quote(op.expression, column)) }
+      end
+
+      def call(val)
+        val && val != expression
+      end
+    end
+
     class INSENSITIVE < GenericOp
       def self.arel_proc
         proc do |column, op|
