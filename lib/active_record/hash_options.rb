@@ -53,8 +53,10 @@ module ActiveRecord
           col_value = case value
           when Regexp
             actual_val =~ value
-          when Array, Range
+          when Array
             value.include?(actual_val)
+          when Range
+            value.cover?(actual_val)
           when ActiveRecord::HashOptions::GenericOp
             value.call(actual_val)
           else # NilClass, String, Integer
