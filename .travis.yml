@@ -1,5 +1,26 @@
+---
 sudo: false
-cache: bundler
 language: ruby
+cache: bundler
+
 rvm:
   - 2.5.5
+
+services:
+  - mysql
+  - postgresql
+
+env:
+  - DB=mysql2
+  - DB=pg
+  - DB=sqlite3
+
+gemfile:
+  - gemfiles/gemfile_50.gemfile
+  - gemfiles/gemfile_51.gemfile
+  - gemfiles/gemfile_52.gemfile
+  - gemfiles/gemfile_60.gemfile
+
+before_script:
+  - mysql -e 'create database hash_options_test;' || true
+  - psql -c 'create database hash_options_test;' -U postgres || true

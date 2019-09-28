@@ -1,4 +1,8 @@
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in activerecord-hash_options.gemspec
 gemspec
+
+gem "activerecord", '~> 5.2'
+gem "mysql2"
+gem "pg"
+gem "sqlite3"
