@@ -1,11 +1,13 @@
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 require 'bundler/setup'
-Bundler.setup
-
 require 'active_record'
 require 'active_record/hash_options'
+Dir['./spec/support/**/*.rb'].sort.each {|f| require f}
 
 RSpec.configure do |config|
+  # Enable flags like --only-failures and --next-failure
+  config.example_status_persistence_file_path = ".rspec_status"
+
   config.expect_with :rspec do |expectations|
     expectations.include_chain_clauses_in_custom_matcher_descriptions = true
   end
@@ -14,6 +16,7 @@ RSpec.configure do |config|
     mocks.verify_partial_doubles = true
   end
 
+  # default for rspec 4, manually set in rspec 3
   config.shared_context_metadata_behavior = :apply_to_host_groups
   config.disable_monkey_patching!
   config.warnings = true
@@ -39,37 +42,3 @@ RSpec.configure do |config|
   # as the one that triggered the failure.
   Kernel.srand config.seed
 end
-
-Dir["./spec/support/**/*.rb"].each {|f| require f}
-
-
-class MyTestDatabase
-  def self.setup
-    ActiveRecord::Base.establish_connection adapter: "sqlite3", database: ":memory:"
-  end
-end
-
-MyTestDatabase.setup
-ActiveRecord::Migration.new.create_table :table1s do |t|
-  t.string  :name
-  t.integer :value, :null => true
-end
-
-class Table1 < ActiveRecord::Base
-  extend ActiveRecord::HashOptions
-  include ActiveRecord::HashOptions::Helpers
-  extend ActiveRecord::HashOptions::Helpers
-
-  def self.big_values
-    where(:value => gt(10))
-  end
-
-  def self.big_name
-    where(:name => like("%big%"))
-  end
-
-  def self.big_iname
-    where(:name => ilike("%big%"))
-  end
-end
-
