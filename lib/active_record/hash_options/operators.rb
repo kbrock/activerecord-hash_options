@@ -121,7 +121,11 @@ module ActiveRecord
     # this is here to group proc for regexp with others
     class REGEXP < GenericOp
       def self.arel_proc
-        proc { |column, op|  Arel::Nodes::Regexp.new(column, op, !!(op.options && Regexp::IGNORECASE))}
+        proc do |column, op|
+          regexp_text = Arel::Nodes.build_quoted(op.source, column)
+          case_sensitive = (op.options & Regexp::IGNORECASE == 0)
+          Arel::Nodes::Regexp.new(column, regexp_text, case_sensitive)
+        end
       end
 
       def call(val)

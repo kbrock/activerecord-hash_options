@@ -122,7 +122,7 @@ RSpec.describe ActiveRecord::HashOptions do
 
   shared_examples "regexp comparable" do
     it "compares with regexp" do
-      skip("db does not support regexps") unless supports_regexp?
+      skip("db #{ENV["db"]} does not support regexps") unless supports_regexp?
 
       expect(filter(collection, :name => /^bi.*/)).to eq([big])
       expect(filter(collection, :name => /^Bi.*/)).to eq([])
