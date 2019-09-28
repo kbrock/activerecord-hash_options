@@ -59,6 +59,10 @@ RSpec.describe ActiveRecord::HashOptions do
       expect(filter(collection, :value => (5..Float::INFINITY))).to eq([big, big2])
     end
 
+    it "compares with multiple neq" do
+#      expect(filter(collection, :value => neq([5, 10]))).to eq([small, big2])
+    end
+
     it "compares with null" do
       expect(filter(collection, :value => nil)).to eq([bad])
     end

@@ -17,6 +17,27 @@ module ActiveRecord
           op_expression
         end
       end
+
+      # negated equality
+      def self.negate(op_expression, column)
+        if op_expression.kind_of?(Array) && op_expression.size > 1
+          nil_exp, not_nil_exp = op_expression.partition { |v| v.nil? }
+          if not_nil_exp.present?
+            # do in or eq
+            if nil_exp.present?
+            elsif not_nil_exp.size == 1
+              op_expression = nil
+            end
+          else
+            op_expression = op_expression.map { |v| GenericOp.quote(v, column) }
+          end
+          Arel::Nodes::NotEqual.new(column, GenericOp.quote(op.expression, column))
+        op_expression = op_expression.first
+        if op_expression.nil? || op_expression.kind_of?(String) || op_expression.kind_of?(Numeric)
+        else
+          Arel::Nodes::Not.new(Arel::Nodes::In.new(column, GenericOp.quote(op.expression, column)))
+        end
+      end
     end
 
     class GT < GenericOp
@@ -61,7 +82,9 @@ module ActiveRecord
 
     class NEQ < GenericOp
       def self.arel_proc
-        proc { |column, op| Arel::Nodes::NotEqual.new(column, GenericOp.quote(op.expression, column)) }
+        proc do |column, op|
+          GenericOp.negate(op.expression, column)
+        end
       end
 
       def call(val)

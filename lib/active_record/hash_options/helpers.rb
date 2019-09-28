@@ -9,6 +9,12 @@ module ActiveRecord
       def lte(val); ActiveRecord::HashOptions::LTE.new(val); end
       def neq(val); ActiveRecord::HashOptions::NEQ.new(val); end
 
+      # for is_empty, may want to compare data type to handle string (needs "") vs other data type (only nil)
+      def is_empty ; [nil, ""] ; end
+      def is_null ; nil ; end
+      def is_not_null ; neq(nil) ; end
+      def is_not_empty ; neq(nil, "") ; end
+
       # string
       def insensitive(val); ActiveRecord::HashOptions::INSENSITIVE.new(val); end
 
