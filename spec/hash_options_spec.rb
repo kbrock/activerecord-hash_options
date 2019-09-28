@@ -64,9 +64,14 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with range" do
-      # dont' think case sensitivity works with this one
-      expect(filter(collection, :name => "big"..."small")).to eq([big])
-      expect(filter(collection, :name => "big".."small")).to match_array([big, small])
+      # sqlite3 is case sensitive for ranges but not for other string operations
+      if case_sensitive? || ENV["DB"] == "sqlite3"
+        expect(filter(collection, :name => "big"..."small")).to eq([big])
+        expect(filter(collection, :name => "big".."small")).to match_array([big, small])
+      else
+        expect(filter(collection, :name => "big"..."small")).to eq([big, big2])
+        expect(filter(collection, :name => "big".."small")).to match_array([big, big2, small])
+      end
     end
 
     it "compares with null" do
