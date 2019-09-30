@@ -19,8 +19,8 @@ Gem::Specification.new do |spec|
   end
   spec.require_paths = ["lib"]
 
+  spec.add_development_dependency "appraisal"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~>3.8.0"
-  spec.add_development_dependency "activerecord", "~> 5.0"
-  spec.add_development_dependency "sqlite3"
+  spec.add_development_dependency "activerecord", ">= 5.0"
 end

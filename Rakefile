@@ -5,5 +5,4 @@ RSpec::Core::RakeTask.new(:spec) do |t|
   t.ruby_opts = %w[-w]
 end
 
-task :rspec => :spec
 task :default => :spec

@@ -48,7 +48,11 @@ RSpec.describe ActiveRecord::HashOptions do
 
   shared_examples "string comparable" do
     it "compares with gt" do
-      expect(filter(collection, :name => gt("big"))).to eq([small])
+      if !mac? && pg?
+        expect(filter(collection, :name => gt("big"))).to eq([small, big2])
+      else
+        expect(filter(collection, :name => gt("big"))).to eq([small])
+      end
     end
 
     it "compares with gte" do
@@ -60,13 +64,21 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with lte" do
-      expect(filter(collection, :name => lte("big"))).to match_array([big, big2])
+      if !mac? && pg?
+        expect(filter(collection, :name => lte("big"))).to eq([big])
+      else
+        expect(filter(collection, :name => lte("big"))).to match_array([big, big2])
+      end
     end
 
     it "compares with range" do
-      # dont' think case sensitivity works with this one
-      expect(filter(collection, :name => "big"..."small")).to eq([big])
-      expect(filter(collection, :name => "big".."small")).to match_array([big, small])
+      if array_test? || (pg? && mac?) || sqlite?
+        expect(filter(collection, :name => "big"..."small")).to eq([big])
+        expect(filter(collection, :name => "big".."small")).to match_array([big, small])
+      else
+        expect(filter(collection, :name => "big"..."small")).to eq([big, big2])
+        expect(filter(collection, :name => "big".."small")).to match_array([big, big2, small])
+      end
     end
 
     it "compares with null" do
@@ -82,7 +94,7 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with like" do
-      if case_sensitive?
+      if array_test? || pg?
         expect(filter(collection, :name => like('%big%'))).to eq([big])
       else
         expect(filter(collection, :name => like('%big%'))).to eq([big, big2])
@@ -94,7 +106,7 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with starts_with" do
-      if case_sensitive?
+      if array_test? || pg?
         expect(filter(collection, :name => starts_with('b'))).to eq([big])
       else
         expect(filter(collection, :name => starts_with('b'))).to eq([big, big2])
@@ -102,7 +114,7 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with ends_with" do
-      if case_sensitive?
+      if array_test? || pg?
         expect(filter(collection, :name => ends_with('g'))).to eq([big])
       else
         expect(filter(collection, :name => ends_with('g'))).to eq([big, big2])
@@ -110,7 +122,7 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with contains" do
-      if case_sensitive?
+      if array_test? || pg?
         expect(filter(collection, :name => contains('i'))).to match_array([big])
       else
         expect(filter(collection, :name => contains('i'))).to match_array([big, big2])
@@ -122,7 +134,7 @@ RSpec.describe ActiveRecord::HashOptions do
 
   shared_examples "regexp comparable" do
     it "compares with regexp" do
-      skip("db does not support regexps") unless supports_regexp?
+      skip("db #{ENV["db"]} does not support regexps") unless array_test? || pg?
 
       expect(filter(collection, :name => /^bi.*/)).to eq([big])
       expect(filter(collection, :name => /^Bi.*/)).to eq([])
@@ -164,18 +176,20 @@ RSpec.describe ActiveRecord::HashOptions do
 
   private
 
-  # pg and arrays support regular expressions
-  def supports_regexp?
-    array_test? || ENV["DB"] == "pg"
-  end
-
-  # sqlite is not case sensitive, pg on ubunto is not case sensitive, pg on mac is case sensitive
-  def case_sensitive?
-    array_test?
+  def mac?
+    Gem::Platform.local.os == "darwin"
   end
 
   def array_test?
     collection.kind_of?(Array)
+  end
+
+  def pg?
+    (ENV["DB"] == "pg" && !array_test?)
+  end
+
+  def sqlite?
+    ENV["DB"] == "sqlite3" && !array_test?
   end
 
   def filter(collection, conditions, negate = false)
