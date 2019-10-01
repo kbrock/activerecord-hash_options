@@ -50,20 +50,24 @@ module ActiveRecord
       array.select do |rec|
         conditions.all? do |name, value|
           actual_val = rec.send(name)
-          col_value = case value
-          when Regexp
-            actual_val =~ value
-          when Array
-            value.include?(actual_val)
-          when Range
-            value.cover?(actual_val)
-          when ActiveRecord::HashOptions::GenericOp
-            value.call(actual_val)
-          else # NilClass, String, Integer
-            actual_val == value
-          end
+          col_value = compare_array_column(actual_val, value, negate)
           negate ? !col_value : col_value
         end
+      end
+    end
+
+    def self.compare_array_column(actual_val, value, negate)
+      case value
+      when Regexp
+        actual_val =~ value
+      when Array
+        value.include?(actual_val)
+      when Range
+        value.cover?(actual_val)
+      when ActiveRecord::HashOptions::GenericOp
+        value.call(actual_val)
+      else # NilClass, String, Integer
+        actual_val == value
       end
     end
   end
