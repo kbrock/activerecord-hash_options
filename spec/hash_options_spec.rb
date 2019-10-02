@@ -150,7 +150,8 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with not_compound" do
-      expect(filter(collection, {:name => ilike('%small%'), :value => gte(10)}, false)).to eq([big])
+      # ! (name = small && value >= 100) --> name != small || value > 10
+      expect(filter(collection, {:name => ilike('%small%'), :value => lte(10)}, true)).to eq([big2])
     end
   end
 
@@ -163,6 +164,7 @@ RSpec.describe ActiveRecord::HashOptions do
     it_should_behave_like "numeric comparable"
     it_should_behave_like "string comparable"
     it_should_behave_like "regexp comparable"
+    it_should_behave_like "compound comparable"
   end
 
   describe "Scope" do
@@ -172,6 +174,7 @@ RSpec.describe ActiveRecord::HashOptions do
     it_should_behave_like "numeric comparable"
     it_should_behave_like "string comparable"
     it_should_behave_like "regexp comparable"
+    it_should_behave_like "compound comparable"
   end
 
   private

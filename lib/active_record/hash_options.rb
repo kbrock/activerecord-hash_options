@@ -50,20 +50,32 @@ module ActiveRecord
       array.select do |rec|
         conditions.all? do |name, value|
           actual_val = rec.send(name)
-          col_value = case value
-          when Regexp
-            actual_val =~ value
-          when Array
-            value.include?(actual_val)
-          when Range
-            value.cover?(actual_val)
-          when ActiveRecord::HashOptions::GenericOp
-            value.call(actual_val)
-          else # NilClass, String, Integer
-            actual_val == value
+          # not thrilled about special cases, but in (array with nil) or == nil are the only cases
+          # that handle negation for a nil value correctly
+          if actual_val.nil? && (value != nil || value.kind_of?(Array) && !value.include?(nil))
+            false
+          else
+            col_value = compare_array_column(actual_val, value, negate)
+            negate ? !col_value : col_value
           end
-          negate ? !col_value : col_value
         end
+      end
+    end
+
+    def self.compare_array_column(actual_val, value, negate)
+      case value
+      when Regexp
+        actual_val =~ value
+      when Array
+        value.include?(actual_val)
+      when Range
+        value.cover?(actual_val)
+      when ActiveRecord::HashOptions::GenericOp
+        # NOTE: nil check in filter_array may short circuited this comparison
+        value.call(actual_val)
+      else # NilClass, String, Integer
+        # NOTE: treats == nil as IS NULL
+        actual_val == value
       end
     end
   end
