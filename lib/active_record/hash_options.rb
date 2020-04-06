@@ -1,6 +1,7 @@
 require "active_record/hash_options/version"
 require "active_record/hash_options/operators"
 require "active_record/hash_options/helpers"
+require "active_record/hash_options/enumerable"
 
 module ActiveRecord
   module HashOptions

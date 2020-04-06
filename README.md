@@ -23,17 +23,32 @@ Or install it yourself as:
 ## Usage
 
 ```ruby
+require 'active_record/hash_options'
+
+Person.where(:name => ActiveRecord::HashOptions::LIKE('Smith%'))
+Person.where(:age => ActiveRecord::HashOptions::GTE(21))
+
+include ActiveRecord::HashOptions # not needed if helpers is included
+
+Person.where(:name => LIKE('Smith%'))
+Person.where.not(:age => GTE(21))
+
+ActiveRecord::HashOptions.filter(Person.all, :name => LIKE('Smith%'))
+ActiveRecord::HashOptions.filter(Person.all.to_a, :name => LIKE('Smith%'))
+ActiveRecord::HashOptions.filter(Person.all.to_a, :age => GTE(21), true)
+
+include ActiveRecord::HashOptions::Helpers
+
 Person.where(:name => like('Smith%'))
+Person.where.not(:age => gte(21))
 
-Person.where(:age => gte(21))
-```
+ActiveRecord::HashOptions.filter(Person.all.to_a, :name => like('Smith%'))
 
-The operations also work with arrays
+Array.send(:include, ActiveRecord::HashOptions::Enumerable)
 
-```ruby
 Person.all.to_a.where(:name => like('Smith%'))
+Person.all.to_a.where.not(:age => gte(21))
 
-Person.all.to_a.where(:age => gte(21))
 ```
 
 ## Development

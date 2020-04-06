@@ -1,3 +1,5 @@
+Array.send(:include, ActiveRecord::HashOptions::Enumerable)
+
 RSpec.describe ActiveRecord::HashOptions do
   before do
     Table1.destroy_all
@@ -196,6 +198,11 @@ RSpec.describe ActiveRecord::HashOptions do
   end
 
   def filter(collection, conditions, negate = false)
-    ActiveRecord::HashOptions.filter(collection, conditions, negate)
+    # ActiveRecord::HashOptions.filter(collection, conditions, negate)
+    if negate
+      collection.where.not(conditions)
+    else
+      collection.where(conditions)
+    end
   end
 end
