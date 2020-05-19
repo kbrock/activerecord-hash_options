@@ -169,12 +169,22 @@ RSpec.describe ActiveRecord::HashOptions do
   ########## string regular expressions ##########
 
   shared_examples "regexp comparable" do
-    it "compares with regexp" do
+    it "compares with regexp lowercase" do
       skip("db #{db_type} does not support regexps") unless array_test? || pg?
 
       expect(filter(collection, :name => /^bi.*/)).to eq([big])
+    end
+
+    it "compares with regexp mixed case" do
+      skip("db #{db_type} does not support regexps") unless array_test? || pg?
+
       expect(filter(collection, :name => /^Bi.*/)).to eq([])
-      expect(filter(collection, :name => /^Bi.*/i)).to eq([big, big2])
+    end
+
+    it "compares with regexp case insensitive" do
+      skip("db #{db_type} does not support regexps") unless array_test? || pg?
+
+      expect(filter(collection, :name => /^Bi.*/i)).to match_array([big, big2])
     end
   end
 
