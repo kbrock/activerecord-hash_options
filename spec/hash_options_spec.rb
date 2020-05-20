@@ -1,6 +1,10 @@
 Array.send(:include, ActiveRecord::HashOptions::Enumerable)
 
 RSpec.describe ActiveRecord::HashOptions do
+  def self.db_type
+    ENV["DB"]
+  end
+
   before do
     Table1.destroy_all
   end
@@ -142,7 +146,7 @@ RSpec.describe ActiveRecord::HashOptions do
 
   shared_examples "regexp comparable" do
     it "compares with regexp" do
-      skip("db #{ENV["db"]} does not support regexps") unless array_test? || pg?
+      skip("db #{db_type} does not support regexps") unless array_test? || pg?
 
       expect(filter(collection, :name => /^bi.*/)).to eq([big])
       expect(filter(collection, :name => /^Bi.*/)).to eq([])
@@ -175,7 +179,7 @@ RSpec.describe ActiveRecord::HashOptions do
     it_should_behave_like "compound comparable"
   end
 
-  describe "Scope" do
+  describe "Scope #{db_type}" do
     let(:collection) { Table1 }
 
     it_should_behave_like "scope comparable"
@@ -207,16 +211,23 @@ RSpec.describe ActiveRecord::HashOptions do
     collection.kind_of?(Array)
   end
 
+  def db_type
+    self.class.db_type
+  end
+
   def pg?
-    ENV["DB"] == "pg" && !array_test?
+    db_type == "pg" && !array_test?
   end
 
   def sqlite?
-    ENV["DB"] == "sqlite3" && !array_test?
+    db_type == "sqlite3" && !array_test?
   end
 
+  # filter a collection
+  # this is typically called via:
+  #   ActiveRecord::HashOptions.filter(collection, conditions, negate)
+  # although there are many ways to reduce the typing - see the readme.
   def filter(collection, conditions, negate = false)
-    # ActiveRecord::HashOptions.filter(collection, conditions, negate)
     if negate
       collection.where.not(conditions)
     else

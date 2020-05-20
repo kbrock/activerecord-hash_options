@@ -1,4 +1,4 @@
-  require "logger"
+require "logger"
 require "active_record"
 
 class Database
@@ -8,6 +8,8 @@ class Database
   end
 
   def adapter
+    ENV['DB'] = "sqlite3" if ENV['DB'] == "sqlite"
+    ENV['DB'] = "mysql2"  if ENV['DB'] == "mysql"
     ENV['DB'] ||= "sqlite3"
   end
 
