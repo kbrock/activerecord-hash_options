@@ -41,6 +41,12 @@ RSpec.describe ActiveRecord::HashOptions do
       expect(filter(collection, :value => 5...100)).to eq([big])
     end
 
+    it "compares with partial ranges" do
+      # in ruby > 2.6, you can just use ..100 or 5..
+      expect(filter(collection, :value => (-Float::INFINITY..50))).to eq([small, big])
+      expect(filter(collection, :value => (5..Float::INFINITY))).to eq([big, big2])
+    end
+
     it "compares with null" do
       expect(filter(collection, :value => nil)).to eq([bad])
     end
