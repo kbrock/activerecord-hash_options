@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module ActiveRecord
   module HashOptions
     # Operator contains logic for producing arel for the database and acts as a lambda for ruby

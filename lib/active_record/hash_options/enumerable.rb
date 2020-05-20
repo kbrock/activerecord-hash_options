@@ -1,6 +1,6 @@
+# frozen_string_literal: true
 
-# include this file if you want Array#where to work
-
+# include into any file to add class to make Array#where
 module ActiveRecord
   module HashOptions
     module Enumerable
