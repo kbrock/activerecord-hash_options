@@ -37,7 +37,7 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with range" do
-      expect(filter(collection, :value => 5..100)).to eq([big, big2])
+      expect(filter(collection, :value => 5..100)).to match_array([big, big2])
       expect(filter(collection, :value => 5...100)).to eq([big])
     end
 
@@ -51,7 +51,7 @@ RSpec.describe ActiveRecord::HashOptions do
   shared_examples "string comparable" do
     it "compares with gt" do
       if !mac? && pg?
-        expect(filter(collection, :name => gt("big"))).to eq([small, big2])
+        expect(filter(collection, :name => gt("big"))).to match_array([small, big2])
       else
         expect(filter(collection, :name => gt("big"))).to eq([small])
       end
@@ -78,7 +78,7 @@ RSpec.describe ActiveRecord::HashOptions do
         expect(filter(collection, :name => "big"..."small")).to eq([big])
         expect(filter(collection, :name => "big".."small")).to match_array([big, small])
       else
-        expect(filter(collection, :name => "big"..."small")).to eq([big, big2])
+        expect(filter(collection, :name => "big"..."small")).to match_array([big, big2])
         expect(filter(collection, :name => "big".."small")).to match_array([big, big2, small])
       end
     end
@@ -99,19 +99,19 @@ RSpec.describe ActiveRecord::HashOptions do
       if array_test? || pg?
         expect(filter(collection, :name => like('%big%'))).to eq([big])
       else
-        expect(filter(collection, :name => like('%big%'))).to eq([big, big2])
+        expect(filter(collection, :name => like('%big%'))).to match_array([big, big2])
       end
     end
 
     it "compares with not_like" do
-      expect(filter(collection, :name => not_like('%small%'))).to eq([big, big2])
+      expect(filter(collection, :name => not_like('%small%'))).to match_array([big, big2])
     end
 
     it "compares with starts_with" do
       if array_test? || pg?
-        expect(filter(collection, :name => starts_with('b'))).to eq([big])
+        expect(filter(collection, :name => starts_with('b'))).to match_array([big])
       else
-        expect(filter(collection, :name => starts_with('b'))).to eq([big, big2])
+        expect(filter(collection, :name => starts_with('b'))).to match_array([big, big2])
       end
     end
 
@@ -119,7 +119,7 @@ RSpec.describe ActiveRecord::HashOptions do
       if array_test? || pg?
         expect(filter(collection, :name => ends_with('g'))).to eq([big])
       else
-        expect(filter(collection, :name => ends_with('g'))).to eq([big, big2])
+        expect(filter(collection, :name => ends_with('g'))).to match_array([big, big2])
       end
     end
 
