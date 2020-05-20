@@ -22,13 +22,21 @@ Or install it yourself as:
 
 ## Usage
 
+There are a number of ways to use active record hash options.
+It all depends upon how much you want to monkey patch your environment
+
 ```ruby
 require 'active_record/hash_options'
 
 Person.where(:name => ActiveRecord::HashOptions::LIKE('Smith%'))
 Person.where(:age => ActiveRecord::HashOptions::GTE(21))
+```
 
-include ActiveRecord::HashOptions # not needed if helpers is included
+---
+
+```ruby
+require 'active_record/hash_options'
+include ActiveRecord::HashOptions
 
 Person.where(:name => LIKE('Smith%'))
 Person.where.not(:age => GTE(21))
@@ -36,14 +44,25 @@ Person.where.not(:age => GTE(21))
 ActiveRecord::HashOptions.filter(Person.all, :name => LIKE('Smith%'))
 ActiveRecord::HashOptions.filter(Person.all.to_a, :name => LIKE('Smith%'))
 ActiveRecord::HashOptions.filter(Person.all.to_a, :age => GTE(21), true)
+```
 
+---
+
+```ruby
+require 'active_record/hash_options'
 include ActiveRecord::HashOptions::Helpers
 
 Person.where(:name => like('Smith%'))
 Person.where.not(:age => gte(21))
 
 ActiveRecord::HashOptions.filter(Person.all.to_a, :name => like('Smith%'))
+```
 
+---
+
+```ruby
+require 'active_record/hash_options'
+include ActiveRecord::HashOptions::Helpers
 Array.send(:include, ActiveRecord::HashOptions::Enumerable)
 
 Person.all.to_a.where(:name => like('Smith%'))
@@ -53,7 +72,10 @@ Person.all.to_a.where.not(:age => gte(21))
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests.
+
+You can also run `bin/console` for an interactive prompt that will allow you to experiment. Model `Table1` will be available
+for your convenience
 
 ## Contributing
 
