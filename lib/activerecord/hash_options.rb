@@ -1,1 +1,1 @@
-require 'active_record/hash_options'
+require "active_record/hash_options"
