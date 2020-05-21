@@ -19,8 +19,11 @@ Gem::Specification.new do |spec|
   end
   spec.require_paths = ["lib"]
 
-  spec.add_development_dependency "appraisal"
+  # We use appraisal to generate the gemfiles
+  # but other than that, we do not use appraisal during the runtime/development time of gem
+  # spec.add_development_dependency "appraisal"
   spec.add_development_dependency "rake", ">= 12.3.3"
-  spec.add_development_dependency "rspec", "~>3.8.0"
+  spec.add_development_dependency "rspec-core", "~>3.8.0"
+  spec.add_development_dependency "rspec-expectations", "~>3.8.0"
   spec.add_development_dependency "activerecord", ">= 5.0"
 end

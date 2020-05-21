@@ -4,7 +4,7 @@ language: ruby
 cache: bundler
 
 rvm:
-  - 2.5.5
+  - 2.5.3
 
 services:
   - mysql
@@ -22,5 +22,5 @@ gemfile:
   - gemfiles/gemfile_60.gemfile
 
 before_script:
-  - mysql -e 'create database hash_options_test;' || true
-  - psql -c 'create database hash_options_test;' -U postgres || true
+  - [ '$DB' = 'mysql2' ] && mysql -e 'create database hash_options_test;' || true
+  - [ '$DB' = 'pg' ] && psql -c 'create database hash_options_test;' -U postgres || true
