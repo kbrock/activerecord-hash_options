@@ -2,7 +2,8 @@ require "logger"
 require "active_record"
 
 class Database
-  attr_accessor :dirname, :adapter
+  attr_accessor :dirname
+  attr_writer :adapter
   def initialize
     @dirname = "#{File.dirname(__FILE__)}/../db"
   end
