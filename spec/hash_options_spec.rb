@@ -257,7 +257,9 @@ RSpec.describe ActiveRecord::HashOptions do
   # although there are many ways to reduce the typing - see the readme.
   def filter(collection, conditions, negate = false)
     if negate
-      collection.where.not(conditions)
+      conditions.each_pair.inject(collection) do |a, (key, value)|
+        a.where.not(key => value)
+      end
     else
       collection.where(conditions)
     end
