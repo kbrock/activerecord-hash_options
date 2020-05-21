@@ -1,6 +1,10 @@
 Array.send(:include, ActiveRecord::HashOptions::Enumerable)
 
 RSpec.describe ActiveRecord::HashOptions do
+  def self.db_type
+    ENV["DB"]
+  end
+
   before do
     Table1.destroy_all
   end
@@ -55,11 +59,27 @@ RSpec.describe ActiveRecord::HashOptions do
   ########## string comparisons ##########
 
   shared_examples "string comparable" do
-    it "compares with gt" do
-      if case_sensitive_string_compare?
+    it "compares with =" do
+      if pg? || array_test? || sqlite?
+        expect(filter(collection, :name => "big")).to eq([big])
+      else # mysql?
+        expect(filter(collection, :name => "big")).to match_array([big, big2])
+      end
+    end
+
+    it "compares with gt lower" do
+      if linux_pg?
         expect(filter(collection, :name => gt("big"))).to match_array([small, big2])
       else
         expect(filter(collection, :name => gt("big"))).to eq([small])
+      end
+    end
+
+    it "compares with gt upper" do
+      if array_test? || mac_pg? || sqlite?
+        expect(filter(collection, :name => gt("BIG"))).to match_array([small, big])
+      else
+        expect(filter(collection, :name => gt("BIG"))).to eq([small])
       end
     end
 
@@ -71,16 +91,24 @@ RSpec.describe ActiveRecord::HashOptions do
       expect(filter(collection, :name => lt("small"))).to match_array([big, big2])
     end
 
-    it "compares with lte" do
-      if case_sensitive_string_compare?
+    it "compares with lte lower" do
+      if linux_pg?
         expect(filter(collection, :name => lte("big"))).to eq([big])
       else
         expect(filter(collection, :name => lte("big"))).to match_array([big, big2])
       end
     end
 
+    it "compares with lte upper" do
+      if linux_pg? || mysql?
+        expect(filter(collection, :name => lte("BIG"))).to match_array([big, big2])
+      else
+        expect(filter(collection, :name => lte("BIG"))).to match_array([big2])
+      end
+    end
+
     it "compares with range" do
-      if case_sensitive_range?
+      if array_test? || mac_pg? || sqlite?
         expect(filter(collection, :name => "big"..."small")).to eq([big])
         expect(filter(collection, :name => "big".."small")).to match_array([big, small])
       else
@@ -142,7 +170,7 @@ RSpec.describe ActiveRecord::HashOptions do
 
   shared_examples "regexp comparable" do
     it "compares with regexp" do
-      skip("db #{ENV["db"]} does not support regexps") unless array_test? || pg?
+      skip("db #{db_type} does not support regexps") unless array_test? || pg?
 
       expect(filter(collection, :name => /^bi.*/)).to eq([big])
       expect(filter(collection, :name => /^Bi.*/)).to eq([])
@@ -175,7 +203,7 @@ RSpec.describe ActiveRecord::HashOptions do
     it_should_behave_like "compound comparable"
   end
 
-  describe "Scope" do
+  describe "Scope #{db_type}" do
     let(:collection) { Table1 }
 
     it_should_behave_like "scope comparable"
@@ -191,14 +219,6 @@ RSpec.describe ActiveRecord::HashOptions do
     array_test? || pg?
   end
 
-  def case_sensitive_range?
-    array_test? || (pg? && mac?) || sqlite?
-  end
-
-  def case_sensitive_string_compare?
-    !mac? && pg?
-  end
-
   def mac?
     Gem::Platform.local.os == "darwin"
   end
@@ -207,16 +227,35 @@ RSpec.describe ActiveRecord::HashOptions do
     collection.kind_of?(Array)
   end
 
+  def db_type
+    self.class.db_type
+  end
+
   def pg?
-    ENV["DB"] == "pg" && !array_test?
+    db_type == "pg" && !array_test?
+  end
+
+  def mac_pg?
+    mac? && pg?
+  end
+
+  def linux_pg?
+    !mac? && pg?
+  end
+
+  def mysql?
+    db_type == "mysql2" && !array_test?
   end
 
   def sqlite?
-    ENV["DB"] == "sqlite3" && !array_test?
+    db_type == "sqlite3" && !array_test?
   end
 
+  # filter a collection
+  # this is typically called via:
+  #   ActiveRecord::HashOptions.filter(collection, conditions, negate)
+  # although there are many ways to reduce the typing - see the readme.
   def filter(collection, conditions, negate = false)
-    # ActiveRecord::HashOptions.filter(collection, conditions, negate)
     if negate
       collection.where.not(conditions)
     else
