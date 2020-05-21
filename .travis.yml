@@ -22,5 +22,5 @@ gemfile:
   - gemfiles/gemfile_60.gemfile
 
 before_script:
-  - mysql -e 'create database hash_options_test;' || true
-  - psql -c 'create database hash_options_test;' -U postgres || true
+  - sh -c "[ '$DB' = 'mysql2' ] && mysql -e 'create database hash_options_test;' || true"
+  - sh -c "[ '$DB' = 'pg' ] && psql -c 'create database hash_options_test;' -U postgres || true"
