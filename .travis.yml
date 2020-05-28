@@ -1,14 +1,14 @@
 ---
-sudo: false
+sudo: true
 language: ruby
 cache: bundler
 
 rvm:
   - 2.5.3
 
-services:
-  - mysql
-  - postgresql
+# services:
+#   - mysql
+#   - postgresql
 
 env:
   - DB=mysql2
@@ -22,5 +22,7 @@ gemfile:
   - gemfiles/gemfile_60.gemfile
 
 before_script:
+  - [ '$DB' = 'mysql2' ] && sudo systemctl mysql start
+  - [ '$DB' = 'pg' ]     && sudo /etc/init.d/postgresql start 9.3
   - [ '$DB' = 'mysql2' ] && mysql -e 'create database hash_options_test;' || true
-  - [ '$DB' = 'pg' ] && psql -c 'create database hash_options_test;' -U postgres || true
+  - [ '$DB' = 'pg' ]     && psql -c 'create database hash_options_test;' -U postgres || true
