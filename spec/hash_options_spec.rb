@@ -169,12 +169,36 @@ RSpec.describe ActiveRecord::HashOptions do
   ########## string regular expressions ##########
 
   shared_examples "regexp comparable" do
-    it "compares with regexp" do
+    it "compares with regexp lowercase (like)" do
+      if case_sensitive_like?
+        expect(filter(collection, :name => /^bi.*/)).to eq([big])
+      else
+        expect(filter(collection, :name => /^bi.*/)).to match_array([big, big2])
+      end
+    end
+
+    it "compares with regexp mixed case (like)" do
+      if case_sensitive_like?
+        expect(filter(collection, :name => /^Bi.*/)).to eq([])
+      else
+        expect(filter(collection, :name => /^Bi.*/)).to match_array([big, big2])
+      end
+    end
+
+    it "compares with regexp case insensitive (ilike)" do
+      expect(filter(collection, :name => /^Bi.*/i)).to match_array([big, big2])
+    end
+
+    it "compares with regexp case sensitive" do
       skip("db #{db_type} does not support regexps") unless array_test? || pg?
 
-      expect(filter(collection, :name => /^bi.*/)).to eq([big])
-      expect(filter(collection, :name => /^Bi.*/)).to eq([])
-      expect(filter(collection, :name => /^Bi.*/i)).to eq([big, big2])
+      expect(filter(collection, :name => /^bi*g/)).to match_array([big])
+    end
+
+    it "compares with regexp case insensitive" do
+      skip("db #{db_type} does not support regexps") unless array_test? || pg?
+
+      expect(filter(collection, :name => /^Bi*g/i)).to match_array([big, big2])
     end
   end
 

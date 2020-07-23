@@ -117,21 +117,5 @@ module ActiveRecord
         super(lk, Regexp::IGNORECASE)
       end
     end
-
-    # typically, a Regexp will go through, so this should not becalled
-    # this is here to group proc for regexp with others
-    class REGEXP < GenericOp
-      def self.arel_proc
-        proc do |column, op|
-          regexp_text = Arel::Nodes.build_quoted(op.source, column)
-          case_sensitive = (op.options & Regexp::IGNORECASE == 0)
-          Arel::Nodes::Regexp.new(column, regexp_text, case_sensitive)
-        end
-      end
-
-      def call(val)
-        val && val =~ expression
-      end
-    end
   end
 end
