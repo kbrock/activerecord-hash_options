@@ -24,7 +24,7 @@ RSpec.configure do |config|
   # not optimal, but all tests can use the ':column => gt()' syntax
   config.include ActiveRecord::HashOptions::Helpers
 
-  #config.profile_examples = 10
+  config.profile_examples = ENV["RSPEC_EXAMPLES"].to_i if ENV["RSPEC_EXAMPLES"].to_s.present?
 
   # Run specs in random order to surface order dependencies. If you find an
   # order dependency and want to debug it, you can fix the order by providing
