@@ -49,35 +49,65 @@ module ActiveRecord
       end
     end
 
+    #  @param negate true if the value is negated (a true value is false)
+    # @returns
+    #   true
+    #   false
+    #   nil (false for both)
     def self.filter_array(array, conditions, negate)
       array.select do |rec|
         conditions.all? do |name, value|
           actual_val = rec.send(name)
-          # not thrilled about special cases, but `x in [..., nil]` and `x == nil` are the only cases
-          # that handle negation for a `nil` / `null` value correctly
-          if actual_val.nil? && (value != nil || value.kind_of?(Array) && !value.include?(nil))
+          case compare_array_column(actual_val, value)
+          when nil # compare with nil is never true
             false
+          when false
+            negate
           else
-            compare_array_column(actual_val, value) ? !negate : negate
+            !negate
           end
         end
       end
     end
 
+    # returns true, false, or nil (the comparison is unknown)
+    # remember, this is sql based, null == "x" and null != "x" are both false
     def self.compare_array_column(actual_val, value)
       case value
       when Regexp
-        actual_val =~ value
+        if actual_val.nil?
+          nil
+        else
+          !!(actual_val =~ value)
+        end
       when Array
-        value.include?(actual_val)
+        if actual_value.nil?
+          if value.include?(nil) # treat as IS NULL
+            true
+          else
+            nil
+          end
+        else
+          !!value.include?(actual_val)
+        end
       when Range
-        value.cover?(actual_val)
+        if actual_val.nil?
+          nil
+        else
+          !!value.cover?(actual_val)
+        end
       when ActiveRecord::HashOptions::GenericOp
-        # NOTE: The `nil?` check in `filter_array` may skip this comparison and short circuit to a false
         value.call(actual_val)
       else # NilClass, String, Integer
-        # NOTE: this treats `x == nil` the same as `x IS NULL`
-        actual_val == value
+        if actual_val.nil?
+          if value.nil? # treat as IS NULL
+            true
+          else
+            nil
+          end
+        else
+          actual_val == value
+        end
       end
     end
   end
