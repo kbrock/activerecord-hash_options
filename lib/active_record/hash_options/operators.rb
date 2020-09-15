@@ -25,7 +25,7 @@ module ActiveRecord
       end
 
       def call(val)
-        val && val > expression
+        val.nil? ? nil : val > expression
       end
     end
 
@@ -35,7 +35,7 @@ module ActiveRecord
       end
 
       def call(val)
-        val && val < expression
+        val.nil? ? nil : val < expression
       end
     end
 
@@ -45,7 +45,7 @@ module ActiveRecord
       end
 
       def call(val)
-        val && val >= expression
+        val.nil? ? nil : val >= expression
       end
     end
 
@@ -55,7 +55,7 @@ module ActiveRecord
       end
 
       def call(val)
-        val && val <= expression
+        val.nil? ? nil : val <= expression
       end
     end
 
@@ -68,7 +68,9 @@ module ActiveRecord
       end
 
       def call(val)
-        val&.downcase == expression&.downcase
+        # a little odd to case insensitive compare with nil.
+        # but it seems possible that this may come out of a regular expression translation
+        val.nil? ? (expression.nil? ? true : nil) : val.downcase == expression&.downcase
       end
     end
 
@@ -81,7 +83,7 @@ module ActiveRecord
 
       def call(val)
         expression2 ||= like_to_regex(expression)
-        val && val =~ expression2
+        val.nil? ? nil : !!(val =~ expression2)
       end
 
       # escape . * ^ $ (this.gif => this[.]gif - so it won't match this_gif)
@@ -104,7 +106,7 @@ module ActiveRecord
 
       def call(val)
         expression2 ||= like_to_regex(expression)
-        val && val !~ expression2
+        val.nil? ? nil : !!(val !~ expression2)
       end
     end
 
