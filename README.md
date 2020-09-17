@@ -22,8 +22,8 @@ Or install it yourself as:
 
 ## Usage
 
-There are a number of ways to use active record hash options.
-It all depends upon how much you want to monkey patch your environment
+There are a number of ways to use active record hash options, contingent upon how much 
+you want to monkey patch your environment.
 
 ```ruby
 require 'active_record/hash_options'
