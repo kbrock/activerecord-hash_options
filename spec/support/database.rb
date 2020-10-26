@@ -1,5 +1,6 @@
 require "logger"
 require "active_record"
+require "erb"
 
 class Database
   attr_accessor :dirname
