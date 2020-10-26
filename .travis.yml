@@ -1,26 +1,25 @@
 ---
-sudo: false
 language: ruby
 cache: bundler
 
 rvm:
-  - 2.5.3
+- 2.5.3
 
 services:
-  - mysql
-  - postgresql
+- mysql
+- postgresql
 
 env:
-  - DB=mysql2
-  - DB=pg
-  - DB=sqlite3
+- DB=mysql2
+- DB=pg
+- DB=sqlite3
 
 gemfile:
-  - gemfiles/gemfile_50.gemfile
-  - gemfiles/gemfile_51.gemfile
-  - gemfiles/gemfile_52.gemfile
-  - gemfiles/gemfile_60.gemfile
+- gemfiles/gemfile_50.gemfile
+- gemfiles/gemfile_51.gemfile
+- gemfiles/gemfile_52.gemfile
+- gemfiles/gemfile_60.gemfile
 
-before_script:
-  - [ '$DB' = 'mysql2' ] && mysql -e 'create database hash_options_test;' || true
-  - [ '$DB' = 'pg' ] && psql -c 'create database hash_options_test;' -U postgres || true
+before_install:
+- mysql -e 'create database IF NOT EXISTS hash_options_test;'
+- psql -c 'create database hash_options_test;' -U postgres
