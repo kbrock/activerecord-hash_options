@@ -1,11 +1,22 @@
 ---
+dist: bionic
 language: ruby
 # cache: bundler has not worked for a long time. using work around
 cache:
   directories:
     - vendor/bundle
 rvm:
-- 2.5.3
+# limiting build to cut down on travis cycles
+# this works with all known version of ruby (2.4..3.0)
+#
+# tests may possibly require 6.0 and higher to use open ended ranges
+# ruby 3.0.1 requires rails 6.0.3 and higher (added in job section)
+#
+# - 2.4.9
+# - 2.5.3
+# - 2.6.5
+- 2.7.0
+# - 3.0.1
 
 services:
 - mysql
@@ -17,10 +28,24 @@ env:
 - DB=sqlite3
 
 gemfile:
-- gemfiles/gemfile_50.gemfile
-- gemfiles/gemfile_51.gemfile
+# limiting build to cut down on travis cycles
+# this works with all known versions of rails (4.1..6.1)
+#   to run test for before rails 5.2, (git log Appraisal)
 - gemfiles/gemfile_52.gemfile
 - gemfiles/gemfile_60.gemfile
+- gemfiles/gemfile_61.gemfile
+
+jobs:
+  include:
+    - env: DB=pg
+      rvm: 3.0
+      gemfile: gemfiles/gemfile_61.gemfile
+    - env: DB=mysql2
+      rvm: 3.0
+      gemfile: gemfiles/gemfile_61.gemfile
+    - env: DB=sqlite3
+      rvm: 3.0
+      gemfile: gemfiles/gemfile_61.gemfile
 
 before_install:
 - mysql -e 'create database IF NOT EXISTS hash_options_test;'
