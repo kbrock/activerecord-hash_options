@@ -1,7 +1,9 @@
 ---
 language: ruby
-cache: bundler
-
+# cache: bundler has not worked for a long time. using work around
+cache:
+  directories:
+    - vendor/bundle
 rvm:
 - 2.5.3
 
