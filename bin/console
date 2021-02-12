@@ -4,7 +4,6 @@ require "bundler/setup"
 require "activerecord/hash_options"
 
 # models for local testing
-require "rspec"
 Dir['./spec/support/**/*.rb'].sort.each { |f| require f }
 
 require "irb"
