@@ -26,4 +26,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec-core", "~>3.8.0"
   spec.add_development_dependency "rspec-expectations", "~>3.8.0"
   spec.add_development_dependency "activerecord", ">= 5.0"
+  spec.add_development_dependency "erb"
 end
