@@ -32,7 +32,7 @@ jobs:
           --health-retries=3
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+     # fail-fast: true
       matrix:
         include:
           - ruby: 2.7
