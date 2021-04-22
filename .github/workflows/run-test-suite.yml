@@ -70,7 +70,8 @@ jobs:
 
       - name: Setup mysql test database
         run: |
-          sudo service mysql start  
+          sudo /etc/init.d/mysql start
+          mysql --port ${{ job.services.mysql.ports['3306'] }} -h 127.0.0.1 -uroot -ppassword -e 'create database IF NOT EXISTS hash_options_test;'
          
       - name: Setup postgres test database
         run: |
