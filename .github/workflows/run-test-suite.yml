@@ -70,9 +70,11 @@ jobs:
 
       - name: Setup mysql test database
         run: |
-          sudo /etc/init.d/mysql start
-          mysql --port ${{ job.services.mysql.ports['3306'] }} -uroot -ppassword -e 'create database IF NOT EXISTS hash_options_test;'
-
+          sudo service mysql stop
+          
+      - name: Set up MySQL
+        uses: mirromutth/mysql-action@v1.1     
+         
       - name: Setup postgres test database
         run: |
           sudo /etc/init.d/postgresql start
