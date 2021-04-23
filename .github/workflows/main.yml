@@ -23,8 +23,6 @@ jobs:
         image: mysql:5.7
         env:
           MYSQL_USER: root
-          MYSQL_ALLOW_EMPTY_PASSWORD: yes
-          MYSQL_PASSWORD:
         ports:
           - '8888:3306'
         options: >-
