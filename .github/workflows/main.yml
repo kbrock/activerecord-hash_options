@@ -24,7 +24,7 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: password
         ports:
-          - '8888:3306'
+          - 3306
         options: >-
           --health-cmd="mysqladmin ping"
           --health-interval=10s
@@ -32,7 +32,6 @@ jobs:
           --health-retries=3
     runs-on: ubuntu-latest
     strategy:
-     # fail-fast: true
       matrix:
         include:
           - ruby: 2.7
@@ -49,10 +48,8 @@ jobs:
        PGDATABASE: postgres
        PGHOST: 127.0.0.1
        PGPORT: 5432
+       MYSQL_PWD: password
        MYSQL_HOST: 127.0.0.1
-       MYSQL_DATABASE: hash_options_test
-       MYSQL_USER: root
-       MYSQL_ALLOW_EMPTY_PASSWORD: yes
        BUNDLE_GEMFILE: gemfiles/gemfile_${{ matrix.activerecord }}.gemfile
 
     steps:
@@ -72,8 +69,7 @@ jobs:
       - name: Setup mysql test database
         run: |
           sudo /etc/init.d/mysql start
-          mysql  –h 127.0.0.1 -u${{ env.MYSQL_USER }} -e 'create database IF NOT EXISTS hash_options_test;'
-          echo "it won't get to this line"
+          mysql --port ${{ job.services.mysql.ports['3306'] }} -uroot -ppassword -e 'create database IF NOT EXISTS hash_options_test;'
       - name: Setup postgres test database
         run: |
           sudo /etc/init.d/postgresql start
