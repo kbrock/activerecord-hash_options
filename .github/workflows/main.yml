@@ -22,7 +22,9 @@ jobs:
       mysql:
         image: mysql:5.7
         env:
-          MYSQL_ROOT_PASSWORD: password
+          MYSQL_USER: root
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_PASSWORD:
         ports:
           - '8888:3306'
         options: >-
@@ -73,7 +75,7 @@ jobs:
       - name: Setup mysql test database
         run: |
           sudo /etc/init.d/mysql start
-          mysql  –h 127.0.0.1 -P3306 -e 'create database IF NOT EXISTS hash_options_test;' -uroot
+          mysql -e 'create database IF NOT EXISTS hash_options_test;' -uroot –-host=127.0.0.1 --port=3306 
           echo "it won't get to this line"
       - name: Setup postgres test database
         run: |
