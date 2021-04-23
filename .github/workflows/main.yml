@@ -24,7 +24,7 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: password
         ports:
-          - '8888:3306'
+          - '3306:3306'
         options: >-
           --health-cmd="mysqladmin ping"
           --health-interval=10s
@@ -55,8 +55,6 @@ jobs:
        MYSQL_ALLOW_EMPTY_PASSWORD: yes
        MYSQL_PASSWORD:
        BUNDLE_GEMFILE: gemfiles/gemfile_${{ matrix.activerecord }}.gemfile
-    ports:
-       - "3306:3306"
 
     steps:
       - name: Checkout code
