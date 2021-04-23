@@ -73,7 +73,7 @@ jobs:
       - name: Setup mysql test database
         run: |
           sudo /etc/init.d/mysql start
-          mysql -e 'create database IF NOT EXISTS hash_options_test;' -uroot –-host=127.0.0.1 --port=3306 
+          mysql -e 'create database IF NOT EXISTS hash_options_test;' -uroot –-host=127.0.0.1 
           echo "it won't get to this line"
       - name: Setup postgres test database
         run: |
