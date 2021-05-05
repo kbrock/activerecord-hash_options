@@ -20,16 +20,18 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       mysql:
-        image: mysql:5.7
-        env:
-          MYSQL_ROOT_PASSWORD: password
-        ports:
-          - 3306
-        options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
+          image: mysql:5.7
+          env:
+            MYSQL_DATABASE: hash_options_test
+            MYSQL_ALLOW_EMPTY_PASSWORD: yes
+            MYSQL_PASSWORD:
+          ports:
+            - 3306
+          options: >-
+            --health-cmd="mysqladmin ping"
+            --health-interval=10s
+            --health-timeout=5s
+            --health-retries=3
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -48,42 +50,50 @@ jobs:
        PGDATABASE: postgres
        PGHOST: 127.0.0.1
        PGPORT: 5432
-       MYSQL_PWD: password
-       MYSQL_HOST: 127.0.0.1
        BUNDLE_GEMFILE: gemfiles/gemfile_${{ matrix.activerecord }}.gemfile
+       MYSQL_DATABASE: hash_options_test
 
     steps:
-      - name: Checkout code
+      - name: checkout code
         uses: actions/checkout@v2
 
-      - name: Setup Ruby
+      - name: setup Ruby
         # This will automatically get bug fixes and new Ruby versions (see https://github.com/ruby/setup-ruby#versioning)
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
-      - name: Install gems
+
+      - name: install gems
         run: |
           bundle config path vendor/bundle
           bundle install --jobs 4 --retry 3
-      - name: Setup mysql test database
+
+      - name: setup mysql test database
         run: |
+          sudo apt-get update && sudo apt-get install -y mysql-client
           sudo /etc/init.d/mysql start
-          mysql --port ${{ job.services.mysql.ports['3306'] }} -uroot -ppassword -e 'create database IF NOT EXISTS hash_options_test;'
-      - name: Setup postgres test database
+          mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports[3306] }} -uroot -e 'CREATE SCHEMA IF NOT EXISTS 'hash_options_test';'
+
+      - name: setup postgres test database
         run: |
           sudo /etc/init.d/postgresql start
           sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
           psql -U postgres -c 'create database hash_options_test;'
-      - name: Run pg tests
+
+      - name: run pg tests
         env:
           DB: pg
         run: bundle exec rake
-      - name: Run mysql tests
+
+      - name: run mysql tests
         env:
           DB: mysql2
+          MYSQL_DATABASE: hash_options_test
+          PORT: ${{ job.services.mysql.ports[3306] }}
         run: bundle exec rake
-      - name: Run sqlite tests
+
+      - name: run sqlite tests
         env:
           DB: sqlite3
         run: bundle exec rake

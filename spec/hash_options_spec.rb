@@ -60,7 +60,7 @@ RSpec.describe ActiveRecord::HashOptions do
 
   shared_examples "string comparable" do
     it "compares with =" do
-      if pg? || array_test? || sqlite?
+      if array_test? || pg? || sqlite?
         expect(filter(collection, :name => "big")).to eq([big])
       else # mysql?
         expect(filter(collection, :name => "big")).to match_array([big, big2])
@@ -68,7 +68,7 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with gt lower" do
-      if linux_pg?
+      if ubuntu_pg?
         expect(filter(collection, :name => gt("big"))).to match_array([small, big2])
       else
         expect(filter(collection, :name => gt("big"))).to eq([small])
@@ -76,7 +76,7 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with gt upper" do
-      if array_test? || mac_pg? || sqlite?
+      if array_test? || mac_pg? || unknown_pg? || sqlite?
         expect(filter(collection, :name => gt("BIG"))).to match_array([small, big])
       else
         expect(filter(collection, :name => gt("BIG"))).to eq([small])
@@ -92,7 +92,7 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with lte lower" do
-      if linux_pg?
+      if ubuntu_pg?
         expect(filter(collection, :name => lte("big"))).to eq([big])
       else
         expect(filter(collection, :name => lte("big"))).to match_array([big, big2])
@@ -100,7 +100,7 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with lte upper" do
-      if linux_pg? || mysql?
+      if ubuntu_pg? || mysql?
         expect(filter(collection, :name => lte("BIG"))).to match_array([big, big2])
       else
         expect(filter(collection, :name => lte("BIG"))).to match_array([big2])
@@ -108,7 +108,7 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with range" do
-      if array_test? || mac_pg? || sqlite?
+      if array_test? || mac_pg? || unknown_pg? || sqlite?
         expect(filter(collection, :name => "big"..."small")).to eq([big])
         expect(filter(collection, :name => "big".."small")).to match_array([big, small])
       else
@@ -244,7 +244,11 @@ RSpec.describe ActiveRecord::HashOptions do
   end
 
   def mac?
-    Gem::Platform.local.os == "darwin"
+    os.include?("darwin")
+  end
+
+  def unknown?
+    !mac? && os.include?("Linux")
   end
 
   def array_test?
@@ -263,8 +267,16 @@ RSpec.describe ActiveRecord::HashOptions do
     mac? && pg?
   end
 
-  def linux_pg?
-    !mac? && pg?
+  def unknown_pg?
+    unknown? && pg?
+  end
+
+  def ubuntu_pg?
+    !mac? && !unknown? && pg?
+  end
+
+  def os
+    @os ||= `uname -a`
   end
 
   def mysql?
