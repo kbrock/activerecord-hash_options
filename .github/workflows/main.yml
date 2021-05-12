@@ -36,7 +36,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - ruby: 2.7
+          - ruby: 2.5
             activerecord: 52
           - ruby: 2.7
             activerecord: 60
