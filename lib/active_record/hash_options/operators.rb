@@ -62,8 +62,12 @@ module ActiveRecord
     class INSENSITIVE < GenericOp
       def self.arel_proc
         proc do |column, op|
-          lower_column = Arel::Nodes::NamedFunction.new("LOWER", [column])
-          Arel::Nodes::Equality.new(lower_column, GenericOp.quote(op.expression.downcase, column))
+          if ActiveRecord::HashOptions.use_like_for_compare
+            Arel::Nodes::Matches.new(column, GenericOp.quote(op.expression, column), nil, false)
+          else
+            lower_column = Arel::Nodes::NamedFunction.new("LOWER", [column])
+            Arel::Nodes::Equality.new(lower_column, GenericOp.quote(op.expression.downcase, column))
+          end
         end
       end
 
@@ -74,15 +78,19 @@ module ActiveRecord
       end
     end
 
-    # Ruby doesn't have like, so I converted regex to like best I could
+    # Ruby doesn't have like, so use regex
     # We could also do the reverse for database operations
+    # Case sensitive like
     class LIKE < GenericOp
       def self.arel_proc
         proc { |column, op| Arel::Nodes::Matches.new(column, GenericOp.quote(op.expression, column), nil, true) }
       end
 
+      def initialize(expression)
+        super(expression, like_to_regex(expression))
+      end
+
       def call(val)
-        expression2 ||= like_to_regex(expression)
         val.nil? ? nil : !!(val =~ expression2)
       end
 
@@ -93,6 +101,8 @@ module ActiveRecord
       # convert ^abc.*$ => ^abc
       # @param extra ilike passes in Regexp::IGNORECASE
       def like_to_regex(lk, extra = nil)
+        # TODO: extra ||= Regexp::IGNORECASE if !ActiveRecord::HashOptions.sensitive_like
+
         exp = lk.gsub(/([.*^$])/) {"[#{$1}]"} # escape special characters
         exp = "^#{exp}$".gsub("%", '.*').gsub("_", ".").gsub(/^\.\*/, '').gsub(/\.\*$/, '')
         Regexp.new(exp, extra)
@@ -105,7 +115,6 @@ module ActiveRecord
       end
 
       def call(val)
-        expression2 ||= like_to_regex(expression)
         val.nil? ? nil : !!(val !~ expression2)
       end
     end
@@ -118,6 +127,38 @@ module ActiveRecord
       def like_to_regex(lk)
         super(lk, Regexp::IGNORECASE)
       end
+    end
+
+    def self.GT(*args)
+      GT.new(*args)
+    end
+
+    def self.LT(*args)
+      LT.new(*args)
+    end
+
+    def self.GTE(*args)
+      GTE.new(*args)
+    end
+
+    def self.LTE(*args)
+      LTE.new(*args)
+    end
+
+    def self.INSENSITIVE(*args)
+      INSENSITIVE.new(*args)
+    end
+
+    def self.LIKE(*args)
+      LIKE.new(*args)
+    end
+
+    def self.NOT_LIKE(*args)
+      NOT_LIKE.new(*args)
+    end
+
+    def self.ILIKE(*args)
+      ILIKE.new(*args)
     end
   end
 end

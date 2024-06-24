@@ -17,6 +17,8 @@ pg:
   username: <%= ENV.fetch("PGUSER", "postgres") %>
   password: <%= ENV.fetch("PGPASSWORD", "postgres") %>
   schema_search_path: public
+  encoding: utf8
+  collation: C
 
 mysql2:
   << : *common
@@ -24,3 +26,5 @@ mysql2:
   port: 3306
   username: root
   password: <%= ENV.fetch("MYSQL_PWD", "password") %>
+  encoding: utf8mb4
+  collation: utf8mb4_bin

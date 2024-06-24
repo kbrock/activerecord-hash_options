@@ -1,13 +1,10 @@
 Array.send(:include, ActiveRecord::HashOptions::Enumerable)
 
 RSpec.describe ActiveRecord::HashOptions do
-  def self.db_type
-    ENV["DB"]
-  end
-
   before do
     Table1.destroy_all
   end
+
   let!(:small) { Table1.create(:name => "small", :value => 1) }
   let!(:big)   { Table1.create(:name => "big", :value => 10) }
   let!(:big2)  { Table1.create(:name => "BIG", :value => 100) }
@@ -60,23 +57,19 @@ RSpec.describe ActiveRecord::HashOptions do
 
   shared_examples "string comparable" do
     it "compares with =" do
-      if array_test? || pg? || sqlite?
+      if case_sensitive?
         expect(filter(collection, :name => "big")).to eq([big])
-      else # mysql?
+      else
         expect(filter(collection, :name => "big")).to match_array([big, big2])
       end
     end
 
     it "compares with gt lower" do
-      if ubuntu_pg?
-        expect(filter(collection, :name => gt("big"))).to match_array([small, big2])
-      else
-        expect(filter(collection, :name => gt("big"))).to eq([small])
-      end
+      expect(filter(collection, :name => gt("big"))).to eq([small])
     end
 
     it "compares with gt upper" do
-      if array_test? || mac_pg? || unknown_pg? || sqlite?
+      if case_sensitive?
         expect(filter(collection, :name => gt("BIG"))).to match_array([small, big])
       else
         expect(filter(collection, :name => gt("BIG"))).to eq([small])
@@ -92,23 +85,19 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with lte lower" do
-      if ubuntu_pg?
-        expect(filter(collection, :name => lte("big"))).to eq([big])
-      else
-        expect(filter(collection, :name => lte("big"))).to match_array([big, big2])
-      end
+      expect(filter(collection, :name => lte("big"))).to match_array([big, big2])
     end
 
     it "compares with lte upper" do
-      if ubuntu_pg? || mysql?
-        expect(filter(collection, :name => lte("BIG"))).to match_array([big, big2])
-      else
+      if case_sensitive?
         expect(filter(collection, :name => lte("BIG"))).to match_array([big2])
+      else
+        expect(filter(collection, :name => lte("BIG"))).to match_array([big, big2])
       end
     end
 
     it "compares with range" do
-      if array_test? || mac_pg? || unknown_pg? || sqlite?
+      if case_sensitive?
         expect(filter(collection, :name => "big"..."small")).to eq([big])
         expect(filter(collection, :name => "big".."small")).to match_array([big, small])
       else
@@ -126,7 +115,11 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with ilike" do
-      expect(filter(collection, :name => ilike('%big%'))).to match_array([big, big2])
+      if case_insensitive_like?
+        expect(filter(collection, :name => ilike('%big%'))).to match_array([big, big2])
+      else
+        expect(filter(collection, :name => ilike('%big%'))).to match_array([big])
+      end
     end
 
     it "compares with like" do
@@ -186,19 +179,35 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with regexp case insensitive (ilike)" do
-      expect(filter(collection, :name => /^Bi.*/i)).to match_array([big, big2])
+      if case_insensitive_like?
+        expect(filter(collection, :name => /^Bi.*/i)).to match_array([big, big2])
+      else
+        expect(filter(collection, :name => /^Bi.*/i)).to match_array([])
+      end
     end
 
     it "compares with regexp case sensitive" do
-      skip("db #{db_type} does not support regexps") unless array_test? || pg?
+      skip("db does not support regexps") unless supports_regex?
 
-      expect(filter(collection, :name => /^bi*g/)).to match_array([big])
+      if case_sensitive?
+        expect(filter(collection, :name => /^bi*g/)).to match_array([big])
+      else
+        expect(filter(collection, :name => /^bi*g/)).to match_array([big, big2])
+      end
     end
 
     it "compares with regexp case insensitive" do
-      skip("db #{db_type} does not support regexps") unless array_test? || pg?
+      skip("db does not support regexps") unless supports_regex?
 
-      expect(filter(collection, :name => /^Bi*g/i)).to match_array([big, big2])
+      if case_insensitive_like?
+        expect(filter(collection, :name => /^Bi*g/i)).to match_array([big, big2])
+      else
+        expect(filter(collection, :name => /^Bi*g/i)).to match_array([])
+      end
+    end
+
+    it "compares with regexp case insensitive (=)" do
+      expect(filter(collection, :name => /^BIG$/i)).to match_array([big, big2])
     end
   end
 
@@ -227,7 +236,7 @@ RSpec.describe ActiveRecord::HashOptions do
     it_should_behave_like "compound comparable"
   end
 
-  describe "Scope #{db_type}" do
+  describe "Scope database" do
     let(:collection) { Table1 }
 
     it_should_behave_like "scope comparable"
@@ -239,52 +248,24 @@ RSpec.describe ActiveRecord::HashOptions do
 
   private
 
+  def case_insensitive_like?
+    array_test? || ActiveRecord::HashOptions.insensitive_like
+  end
+
   def case_sensitive_like?
-    array_test? || pg?
+    array_test? || ActiveRecord::HashOptions.sensitive_like
   end
 
-  def mac?
-    os.include?("darwin")
+  def case_sensitive?
+    array_test? || ActiveRecord::HashOptions.sensitive_compare
   end
 
-  def unknown?
-    !mac? && os.include?("Linux")
+  def supports_regex?
+    array_test? || ActiveRecord::HashOptions.use_regex
   end
 
   def array_test?
     collection.kind_of?(Array)
-  end
-
-  def db_type
-    self.class.db_type
-  end
-
-  def pg?
-    db_type == "pg" && !array_test?
-  end
-
-  def mac_pg?
-    mac? && pg?
-  end
-
-  def unknown_pg?
-    unknown? && pg?
-  end
-
-  def ubuntu_pg?
-    !mac? && !unknown? && pg?
-  end
-
-  def os
-    @os ||= `uname -a`
-  end
-
-  def mysql?
-    db_type == "mysql2" && !array_test?
-  end
-
-  def sqlite?
-    db_type == "sqlite3" && !array_test?
   end
 
   # filter a collection

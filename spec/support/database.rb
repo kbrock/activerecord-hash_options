@@ -25,6 +25,7 @@ class Database
     # log.level = Logger::Severity::DEBUG
     log.level = Logger::Severity::UNKNOWN
     ActiveRecord::Base.logger = log
+
     self
   end
 
@@ -48,6 +49,10 @@ class Database
     else
       ActiveRecord::Base.establish_connection config
     end
+
+    ActiveRecord::HashOptions.detect(ActiveRecord::Base.connection, adapter)
+
+    puts "database settings (#{adapter}):", ActiveRecord::HashOptions.settings.inspect
 
     require "#{dirname}/schema"
     require "#{dirname}/models"

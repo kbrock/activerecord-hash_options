@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
 
 require "bundler/setup"
-require "activerecord/hash_options"
+require "active_record"
+require "active_record/hash_options"
 
 # models for local testing
 Dir['./spec/support/**/*.rb'].sort.each { |f| require f }

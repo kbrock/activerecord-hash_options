@@ -4,6 +4,12 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
+  schedule:
+   - cron: '0 0 * * *'
+
+permissions:
+  contents: read
 
 jobs:
   test:
@@ -77,10 +83,9 @@ jobs:
         env:
           DB: pg
           # latin1 locale on mac is borked, so just using ascii / c / posix
-          LOCALE: POSIX
+          LOCALE: C
         run: |
-          psql -U postgres --host 127.0.0.1 --port 5432 -c "create database hash_options_test locale ${LOCALE} template template0;"
-          psql -l
+          psql -U postgres --host 127.0.0.1 --port 5432 -c "create database hash_options_test ENCODING utf8 locale 'C' template template0;"
           bundle exec rake
 
       - name: run mysql tests
@@ -88,7 +93,7 @@ jobs:
           DB: mysql2
           MYSQL_DATABASE: hash_options_test
         run: |
-          mysql --host 127.0.0.1 --port 3306 -uroot -e "CREATE DATABASE IF NOT EXISTS hash_options_test CHARACTER SET latin1;"
+          mysql --host 127.0.0.1 --port 3306 -uroot -e "CREATE DATABASE hash_options_test CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;"
           bundle exec rake
 
       - name: run sqlite tests

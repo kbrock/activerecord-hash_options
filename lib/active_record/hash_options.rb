@@ -7,6 +7,45 @@ require "active_record/hash_options/enumerable"
 
 module ActiveRecord
   module HashOptions
+    # likes are case sensitive (all but sqlite - depending upon locale)
+    cattr_accessor :sensitive_like, :default => true
+    # likes can be case insensitive (i.e.: ILIKE and postgres)
+    cattr_accessor :insensitive_like, :default => true
+    # = are case sensitive (all but mysql. locales may change this)
+    cattr_accessor :sensitive_compare, :default => true
+    # for an insensitive equality, we can use "col LIKE value" or "LOWER(col) = value.downcase"
+    cattr_accessor :use_like_for_compare, :default => false
+    # use regular expressions (all but sqlite - but extensions can change this)
+    cattr_accessor :use_regex, :default => true
+
+    # convenience method to display detected values
+    def self.settings
+      {
+        :sensitive_like       => sensitive_like,
+        :insensitive_like     => insensitive_like,
+        :sensitive_compare    => sensitive_compare,
+        :use_regex            => use_regex,
+        :use_like_for_compare => use_like_for_compare
+      }
+    end
+
+    # detect settings from the database
+    # please call after a database connection has been established
+    def self.detect(connection, driver)
+      # only need to force this for mysql - otherwise it detects strange values
+      collation = connection.try(:collation) if driver =~ /mysql/
+
+      # a like 'A' (please respect case) - returns false if respects case
+      self.sensitive_like = !detect_boolean(Arel::Nodes::Matches.new(quote('a'), quote("A"), nil, true), connection, collation)
+      # a like 'A' (please ignore case) - returns true if can ignore case
+      self.insensitive_like = detect_boolean(Arel::Nodes::Matches.new(quote('a'), quote('A'), nil, false), connection, collation)
+      # # a = 'A' - returns false if respects case
+      self.sensitive_compare = !detect_boolean(Arel::Nodes::Equality.new(quote('a'), quote('A')), connection, collation)
+      # a ~ a - returns true if can use regular expressions
+      self.use_regex = detect_boolean(Arel::Nodes::Regexp.new(quote('a'), quote('a'), true), connection, collation)
+      self.use_like_for_compare = !sensitive_like
+    end
+
     def self.extended(mod)
       ActiveRecord::HashOptions.register_my_handler(mod)
     end
@@ -109,6 +148,21 @@ module ActiveRecord
           actual_val == value
         end
       end
+    end
+
+    private
+
+    def self.detect_boolean(clause, connection, collation = nil)
+      clause = Arel::Nodes::SqlLiteral.new("#{clause.to_sql} COLLATE #{collation}") if collation
+      sql = Arel::Nodes::SelectCore.new.tap { |sc| sc.projections << clause }
+      ret = connection.select_value(sql)
+      (ret == 1 || ret == true)
+    rescue NotImplementedError
+      false
+    end
+
+    def self.quote(str)
+      Arel::Nodes.build_quoted(str)
     end
   end
 end

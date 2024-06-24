@@ -6,20 +6,21 @@ module ActiveRecord
       def self.arel_proc
         proc do |column, op|
           mode, case_sensitive, source = convert_regex(op)
-          source = Arel::Nodes.build_quoted(source)
-          # case_sensitive &&= case_sensitive_database && case_sensitive_column
-          # mode = "like" if mode == "=" && !case_sensitive && !use_lower_function
+          mode = "like" if mode == "=" && !case_sensitive && ActiveRecord::HashOptions.use_like_for_compare
           case mode
           when '='
-            if case_sensitive
-              Arel::Nodes::Equality.new(column, source)
+            # NOTE: case_sensitive is ignored and always false = false when ActiveRecord::HashOptions.sensitive_compare is false
+            # for this reason, don't use function hack when the db is case insensitive
+            if case_sensitive || !ActiveRecord::HashOptions.sensitive_compare
+              Arel::Nodes::Equality.new(column, Arel::Nodes.build_quoted(source))
             else
-              Arel::Nodes::Equality.new(Arel::Nodes::NamedFunction.new("LOWER", [column]), source.downcase.gsub(/\\/, ""))
+              Arel::Nodes::Equality.new(Arel::Nodes::NamedFunction.new("LOWER", [column]), Arel::Nodes.build_quoted(source.downcase.gsub(/\\/, "")))
             end
           when 'like'
-            Arel::Nodes::Matches.new(column, source, nil, case_sensitive)
+            # NOTE: when ActiveRecord::HashOptions.sensitive_like is false, case_sensitive is ignored and basically false
+            Arel::Nodes::Matches.new(column, Arel::Nodes.build_quoted(source), nil, case_sensitive)
           when '~'
-            Arel::Nodes::Regexp.new(column, source, case_sensitive)
+            Arel::Nodes::Regexp.new(column, Arel::Nodes.build_quoted(source), case_sensitive)
           end
         end
       end
