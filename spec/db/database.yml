@@ -1,9 +1,10 @@
 common: &common
   database: hash_options_test
   encoding: utf8
-  host: localhost
+  host: "127.0.0.1"
   pool: 3
   wait_timeout: 5
+  min_messages: WARNING
 
 sqlite3:
   <<: *common
@@ -13,14 +14,13 @@ sqlite3:
 pg:
   <<: *common
   adapter: postgresql
-  username: postgres
-  min_messages: WARNING
+  username: <%= ENV.fetch("PGUSER", "postgres") %>
+  password: <%= ENV.fetch("PGPASSWORD", "postgres") %>
   schema_search_path: public
 
 mysql2:
+  << : *common
   adapter: mysql2
-  host: 127.0.0.1
-  encoding: utf8
-  database: <%= ENV["MYSQL_DATABASE"].presence %>
-  port: <%= ENV["PORT"].presence&.to_i || 3306 %>
+  port: 3306
   username: root
+  password: <%= ENV.fetch("MYSQL_PWD", "password") %>
