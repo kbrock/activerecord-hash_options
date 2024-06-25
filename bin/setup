@@ -6,3 +6,13 @@ set -vx
 bundle install
 
 # Do any other automated setup that you need to do here
+# eval $(grep -i "create database hash" .github/workflows/main.yml)
+psql -U postgres --host 127.0.0.1 --port 5432 -c "drop database hash_options_test"
+psql -U postgres --host 127.0.0.1 --port 5432 -c "create database hash_options_test ENCODING utf8 locale 'C' template template0;"
+
+mysql --host ${MYSQL_HOST:-127.0.0.1} --port ${MYSQL_PORT:-3306} -u${MYSQL_USER:-root} -e "DROP DATABASE hash_options_test;"
+mysql --host ${MYSQL_HOST:-127.0.0.1} --port ${MYSQL_PORT:-3306} -u${MYSQL_USER:-root} -e "CREATE DATABASE hash_options_test CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;"
+
+#psql -U postgres -c "create database hash_options_test LOCALE 'en_US.UTF-8' ENCODING 'UTF-8';"
+#mysql -uroot -e "CREATE DATABASE IF NOT EXISTS hash_options_test CHARACTER SET utf8 COLLATE utf8mb3_general_ci;"
+

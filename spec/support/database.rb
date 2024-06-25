@@ -25,13 +25,34 @@ class Database
     # log.level = Logger::Severity::DEBUG
     log.level = Logger::Severity::UNKNOWN
     ActiveRecord::Base.logger = log
+
     self
   end
 
   def migrate
     ActiveRecord::Migration.verbose = false
-    ActiveRecord::Base.configurations = YAML::load(ERB.new(IO.read("#{dirname}/database.yml")).result)
-    ActiveRecord::Base.establish_connection ActiveRecord::Base.configurations[adapter]
+
+    config_contents = ERB.new(IO.read("#{dirname}/database.yml")).result
+    ActiveRecord::Base.configurations = all_config = if YAML.respond_to?(:safe_load)
+      YAML.safe_load(config_contents, aliases: true)
+    else
+      YAML.load(config_contents)
+    end
+    config = all_config[adapter]
+    if config.blank?
+      $stderr.puts "","","ERROR: Could not find '#{adapter}' in #{filename}"
+      $stderr.puts "Pick from: #{all_config.keys.join(", ")}", "", ""
+      exit(1)
+    end
+    if ActiveRecord::VERSION::MAJOR >= 6
+      ActiveRecord::Base.establish_connection(**config)
+    else
+      ActiveRecord::Base.establish_connection config
+    end
+
+    ActiveRecord::HashOptions.detect(ActiveRecord::Base.connection, adapter)
+
+    puts "database settings (#{adapter}):", ActiveRecord::HashOptions.settings.inspect
 
     require "#{dirname}/schema"
     require "#{dirname}/models"

@@ -4,29 +4,40 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
+  schedule:
+   - cron: '0 0 * * *'
+
+permissions:
+  contents: read
 
 jobs:
   test:
     services:
       postgres:
-        image: postgres:10.8
+        image: postgres:13
+        ports:
+          - "5432:5432"
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test
+          # manually create our with a locale
+          # POSTGRES_DB: postgres
+          POSTGRES_INITDB_ARGS: "--locale POSIX"
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
       mysql:
-          image: mysql:5.7
+          image: mysql:8.0
           env:
-            MYSQL_DATABASE: hash_options_test
-            MYSQL_ALLOW_EMPTY_PASSWORD: yes
-            MYSQL_PASSWORD:
+            # locally: use database ; SET PASSWORD FOR root@localhost = 'password' ;
+            MYSQL_ROOT_PASSWORD: password
+            # manually create with a locale
+            # MYSQL_DATABASE: test
           ports:
-            - 3306
+            - "3306:3306"
           options: >-
             --health-cmd="mysqladmin ping"
             --health-interval=10s
@@ -34,64 +45,56 @@ jobs:
             --health-retries=3
     runs-on: ubuntu-latest
     strategy:
+      # fail-fast: false
       matrix:
-        include:
-          - ruby: 2.5
-            activerecord: 52
-          - ruby: 2.7
-            activerecord: 60
-          - ruby: 2.7
-            activerecord: 61
-          - ruby: 3.0
-            activerecord: 61
+        activerecord: [70, 71]
+        ruby: ["3.2"]
+        # include:
+          # - ruby: 2.7
+          #   activerecord: 61
+          # rails 6.1 and 7.0 have different ruby versions
+          # - ruby: 2.7
+          #   activerecord: 61
+          # - ruby: "3.0"
+          #   activerecord: 61
     env:
-       PGUSER: postgres
-       PGPASSWORD: postgres
-       PGDATABASE: postgres
-       PGHOST: 127.0.0.1
-       PGPORT: 5432
-       BUNDLE_GEMFILE: gemfiles/gemfile_${{ matrix.activerecord }}.gemfile
-       MYSQL_DATABASE: hash_options_test
-
+      # for the pg cli (psql)
+      PGHOST: "127.0.0.1"
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      # for the mysql cli (mysql)
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: 3306
+      MYSQL_PWD: password
+      # for rails tests (from matrix)
+      BUNDLE_GEMFILE: gemfiles/gemfile_${{ matrix.activerecord }}.gemfile
     steps:
       - name: checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: setup Ruby
-        # This will automatically get bug fixes and new Ruby versions (see https://github.com/ruby/setup-ruby#versioning)
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
-          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
-
-      - name: install gems
-        run: |
-          bundle config path vendor/bundle
-          bundle install --jobs 4 --retry 3
-
-      - name: setup mysql test database
-        run: |
-          sudo apt-get update && sudo apt-get install -y mysql-client
-          sudo /etc/init.d/mysql start
-          mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports[3306] }} -uroot -e 'CREATE SCHEMA IF NOT EXISTS 'hash_options_test';'
-
-      - name: setup postgres test database
-        run: |
-          sudo /etc/init.d/postgresql start
-          sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
-          psql -U postgres -c 'create database hash_options_test;'
+          bundler-cache: true
 
       - name: run pg tests
         env:
           DB: pg
-        run: bundle exec rake
+          # latin1 locale on mac is borked, so just using ascii / c / posix
+          LOCALE: C
+        run: |
+          psql -U postgres --host 127.0.0.1 --port 5432 -c "create database hash_options_test ENCODING utf8 locale 'C' template template0;"
+          bundle exec rake
 
       - name: run mysql tests
         env:
           DB: mysql2
           MYSQL_DATABASE: hash_options_test
-          PORT: ${{ job.services.mysql.ports[3306] }}
-        run: bundle exec rake
+        run: |
+          mysql --host 127.0.0.1 --port 3306 -uroot -e "CREATE DATABASE hash_options_test CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;"
+          bundle exec rake
 
       - name: run sqlite tests
         env:
