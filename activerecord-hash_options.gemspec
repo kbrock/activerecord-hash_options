@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.require_paths = ["lib"]
-  # no real ruby requirements
+
   spec.required_ruby_version = ">= 2.6"
 
   spec.add_development_dependency "activerecord", ">= 5.0"
@@ -28,7 +28,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "erb"
   spec.add_development_dependency "manageiq-style"
   spec.add_development_dependency "rake", ">= 12.3.3"
-  spec.add_development_dependency "rspec-core", "~>3.8.0"
-  spec.add_development_dependency "rspec-expectations", "~>3.8.0"
+  spec.add_development_dependency "rspec-core", "~>3.8"
+  spec.add_development_dependency "rspec-expectations", "~>3.8"
   spec.add_development_dependency "simplecov", ">= 0.21.2"
 end
