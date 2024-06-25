@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module ActiveRecord
   module HashOptions
     # Operator contains logic for producing arel for the database and acts as a lambda for ruby
@@ -74,7 +75,11 @@ module ActiveRecord
       def call(val)
         # a little odd to case insensitive compare with nil.
         # but it seems possible that this may come out of a regular expression translation
-        val.nil? ? (expression.nil? ? true : nil) : val.downcase == expression&.downcase
+        if val.nil?
+          expression.nil? ? true : nil
+        else
+          val.downcase == expression&.downcase
+        end
       end
     end
 
@@ -100,16 +105,16 @@ module ActiveRecord
       # convert ^.*abc$ => abc$
       # convert ^abc.*$ => ^abc
       # @param extra ilike passes in Regexp::IGNORECASE
-      def like_to_regex(lk, extra = nil)
+      def like_to_regex(expression, extra = nil)
         # TODO: extra ||= Regexp::IGNORECASE if !ActiveRecord::HashOptions.sensitive_like
 
-        exp = lk.gsub(/([.*^$])/) {"[#{$1}]"} # escape special characters
-        exp = "^#{exp}$".gsub("%", '.*').gsub("_", ".").gsub(/^\.\*/, '').gsub(/\.\*$/, '')
+        exp = expression.gsub(/([.*^$])/) { "[#{$1}]" } # escape special characters
+        exp = "^#{exp}$".gsub("%", '.*').tr("_", ".").gsub(/^\.\*/, '').gsub(/\.\*$/, '')
         Regexp.new(exp, extra)
       end
     end
 
-    class NOT_LIKE < LIKE
+    class NOT_LIKE < LIKE # rubocop:disable Naming/ClassAndModuleCamelCase
       def self.arel_proc
         proc { |column, op| Arel::Nodes::DoesNotMatch.new(column, GenericOp.quote(op.expression, column), nil, true) }
       end
@@ -124,8 +129,8 @@ module ActiveRecord
         proc { |column, op| Arel::Nodes::Matches.new(column, GenericOp.quote(op.expression, column), nil, false) }
       end
 
-      def like_to_regex(lk)
-        super(lk, Regexp::IGNORECASE)
+      def like_to_regex(expression)
+        super(expression, Regexp::IGNORECASE)
       end
     end
 

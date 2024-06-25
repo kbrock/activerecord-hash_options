@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
-# include into any file to add class to make Array#where
 module ActiveRecord
   module HashOptions
+    # Adds where to any class
+    # Most commonly, this is included into Array
+    # Rhe requirement is for the class to implement #select
     module Enumerable
       def where(conditions = :chain)
-        if :chain == conditions
+        if conditions == :chain
           ActiveRecord::HashOptions::Enumerable::NotChain.new(self)
         else
           ActiveRecord::HashOptions.filter(self, conditions, false)

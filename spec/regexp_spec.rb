@@ -72,7 +72,7 @@ RSpec.describe ActiveRecord::HashOptions::REGEXP do
     end
 
     it "detects escaped % (\\%) to equals" do
-      expect(described_class.convert_regex(/^a\%b$/)).to eq(["=", true, "a\\%b"])
+      expect(described_class.convert_regex(/^a\%b$/)).to eq(["=", true, "a\\%b"]) # rubocop:disable Style/RedundantRegexpEscape
     end
 
     it "detects escaped % ([%]) followed by wildcard " do
@@ -80,7 +80,7 @@ RSpec.describe ActiveRecord::HashOptions::REGEXP do
     end
 
     it "detects escaped % ([%]) to equals" do
-      expect(described_class.convert_regex(/^a\%b$/)).to eq(["=", true, "a\\%b"])
+      expect(described_class.convert_regex(/^a\%b$/)).to eq(["=", true, "a\\%b"]) # rubocop:disable Style/RedundantRegexpEscape
     end
   end
 end

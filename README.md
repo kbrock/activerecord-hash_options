@@ -1,25 +1,22 @@
 # ActiveRecord::HashOptions
 
-## Stalled
-
-This is stalled because it is too hard to implement string comparisions that are the same in the database and in sql.
-The solution will probably be simple but needs to be done. Definintely need to use the same locale for ruby as we are using in the database.
-
 ## What is it?
 
 This enhances active record so that it can be used in more cases
 than the pure equality case.
 
-### Equality only
+### Equality only - SOLVED
 
 Active record hash syntax only support equality.
 For things like case insensitivity or regular expression matching, arel is needed.
 
-It would be nice to use `where(:col => val)` syntax for other operators, too.
+It would be nice to use `where(:book_count => gt(22))` like type syntax for more complicated operations, too.
+
+Ranges do provide some operations, so a number of these cases may not be necessary. E.g. `where(:book_count => 5..)`
 
 ### Problem 2
 
-Active record caches data in an association. When a similar association has a where clause, it also needs to be downloaded since the `where()` clause is only executable in the database.
+Active record caches data in an association. When a similar association has a where clause, it also needs to be fetched since the `where()` clause is only executable in the database.
 
 has_many :books
 has_many :overdue_books, -> { where(:overdue => true) }
@@ -30,7 +27,7 @@ It would be nice to only have 1 copy of the data locally.
 
 Active record only supports sorting case sensitive.
 
-It would be nice to use standard `order()`
+It would be nice to use standard `order(insensitive(:name))`
 
 ### Problem 4
 

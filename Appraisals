@@ -1,5 +1,5 @@
 # git log on this file will show how to generate the gemfiles for this
-%w(6.0.0 6.1.0 7.0 7.1).each do |ar_version|
+%w[6.0.0 6.1.0 7.0 7.1].each do |ar_version|
   appraise "gemfile-#{ar_version.split('.').first(2).join}" do
     gem "activerecord", "~> #{ar_version}"
     remove_gem "byebug"

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require "active_record/hash_options/version"
 require "active_record/hash_options/operators"
 require "active_record/hash_options/operators/regexp"
@@ -33,7 +34,7 @@ module ActiveRecord
     # please call after a database connection has been established
     def self.detect(connection, driver)
       # only need to force this for mysql - otherwise it detects strange values
-      collation = connection.try(:collation) if driver =~ /mysql/
+      collation = connection.try(:collation) if driver.include?("mysql")
 
       # a like 'A' (please respect case) - returns false if respects case
       self.sensitive_like = !detect_boolean(Arel::Nodes::Matches.new(quote('a'), quote("A"), nil, true), connection, collation)
@@ -47,10 +48,12 @@ module ActiveRecord
     end
 
     def self.extended(mod)
+      super
       ActiveRecord::HashOptions.register_my_handler(mod)
     end
 
     def self.inherited(mod)
+      super
       ActiveRecord::HashOptions.register_my_handler(mod)
     end
 
@@ -72,8 +75,8 @@ module ActiveRecord
       end
     end
 
-    def self.filter(scope_or_array, conditions, negate = false)
-      if scope_or_array.kind_of?(Array)
+    def self.filter(scope_or_array, conditions, negate = false) # rubocop:disable Style/OptionalBooleanParameter
+      if scope_or_array.kind_of?(Array) || scope_or_array.kind_of?(ActiveRecord::HashOptions::Enumerable)
         filter_array(scope_or_array, conditions, negate)
       else
         filter_scope(scope_or_array, conditions, negate)
@@ -94,12 +97,16 @@ module ActiveRecord
     #   false
     #   nil (false for both)
     def self.filter_array(array, conditions, negate)
+      # rails <= 6.0, negation NOR:
+      # method = :all?
+      # rails >= 6.1, negation uses NAND:
+      method = negate ? :any? : :all?
       array.select do |rec|
-        conditions.all? do |name, value|
+        conditions.send(method) do |name, value|
           actual_val = rec.send(name)
           case compare_array_column(actual_val, value)
           when nil # compare with nil is never true
-            false
+            nil
           when false
             negate
           else
@@ -117,17 +124,13 @@ module ActiveRecord
         if actual_val.nil?
           nil
         else
-          !!(actual_val =~ value)
+          actual_val.match(value)
         end
       when Array
-        if actual_value.nil?
-          if value.include?(nil) # treat as IS NULL
-            true
-          else
-            nil
-          end
+        if actual_val.nil?
+          value.include?(nil) ? true : nil # treat as IS NULL
         else
-          !!value.include?(actual_val)
+          value.include?(actual_val)
         end
       when Range
         if actual_val.nil?
@@ -139,30 +142,25 @@ module ActiveRecord
         value.call(actual_val)
       else # NilClass, String, Integer
         if actual_val.nil?
-          if value.nil? # treat as IS NULL
-            true
-          else
-            nil
-          end
+          value.nil? ? true : nil # treat as IS NULL
         else
           actual_val == value
         end
       end
     end
 
-    private
-
     def self.detect_boolean(clause, connection, collation = nil)
       clause = Arel::Nodes::SqlLiteral.new("#{clause.to_sql} COLLATE #{collation}") if collation
       sql = Arel::Nodes::SelectCore.new.tap { |sc| sc.projections << clause }
-      ret = connection.select_value(sql)
-      (ret == 1 || ret == true)
+      [1, true].include?(connection.select_value(sql))
     rescue NotImplementedError
       false
     end
+    private_class_method :detect_boolean
 
     def self.quote(str)
       Arel::Nodes.build_quoted(str)
     end
+    private_class_method :quote
   end
 end
