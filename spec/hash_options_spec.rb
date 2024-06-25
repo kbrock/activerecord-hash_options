@@ -14,6 +14,14 @@ RSpec.describe ActiveRecord::HashOptions do
     it "supports scopes with comparisons" do
       expect(collection.big_values).to match_array([big2])
     end
+
+    it "supports scopes with like comparisons" do
+      if case_sensitive_like?
+        expect(collection.big_name).to match_array([big])
+      else
+        expect(collection.big_name).to match_array([big, big2])
+      end
+    end
   end
 
   ########## numeric comparisons ##########
@@ -23,16 +31,32 @@ RSpec.describe ActiveRecord::HashOptions do
       expect(filter(collection, :value => gt(10))).to eq([big2])
     end
 
+    it "compares with gt (long)" do
+      expect(filter(collection, :value => ActiveRecord::HashOptions::GT(10))).to eq([big2])
+    end
+
     it "compares with gte" do
       expect(filter(collection, :value => gte(10))).to match_array([big, big2])
+    end
+
+    it "compares with gte (long)" do
+      expect(filter(collection, :value => ActiveRecord::HashOptions::GTE(10))).to match_array([big, big2])
     end
 
     it "compares with lt" do
       expect(filter(collection, :value => lt(10))).to eq([small])
     end
 
+    it "compares with lt (long)" do
+      expect(filter(collection, :value => ActiveRecord::HashOptions::LT(10))).to eq([small])
+    end
+
     it "compares with lte" do
       expect(filter(collection, :value => lte(10))).to match_array([small, big])
+    end
+
+    it "compares with lte (long)" do
+      expect(filter(collection, :value => ActiveRecord::HashOptions::LTE(10))).to match_array([small, big])
     end
 
     it "compares with range" do
@@ -40,14 +64,23 @@ RSpec.describe ActiveRecord::HashOptions do
       expect(filter(collection, :value => 5...100)).to eq([big])
     end
 
-    it "compares with partial ranges" do
-      # in ruby > 2.6, you can just use ..100 or 5..
+    it "compares with partial ranges (infinity)" do
       expect(filter(collection, :value => (-Float::INFINITY..50))).to eq([small, big])
       expect(filter(collection, :value => (5..Float::INFINITY))).to eq([big, big2])
     end
 
+    # open ranges require ruby 2.6
+    it "compares with partial ranges (open ranges)" do
+      expect(filter(collection, :value => ..50)).to eq([small, big])
+      expect(filter(collection, :value => 5..)).to eq([big, big2])
+    end
+
     it "compares with null" do
       expect(filter(collection, :value => nil)).to eq([bad])
+    end
+
+    it "compares with multiple values" do
+      expect(filter(collection, :value => [nil, 10])).to match_array([bad, big])
     end
   end
 
@@ -108,8 +141,26 @@ RSpec.describe ActiveRecord::HashOptions do
       expect(filter(collection, :name => nil)).to eq([bad])
     end
 
-    it "compares with insensitivity" do
+    it "compares with insensitivity (like)" do
+      skip "db does not support case insensitive like" unless case_insensitive_like?
+
+      old_like, ActiveRecord::HashOptions.use_like_for_compare = ActiveRecord::HashOptions.use_like_for_compare, true
+
       expect(filter(collection, :name => insensitive('Big'))).to match_array([big, big2])
+    ensure
+      ActiveRecord::HashOptions.use_like_for_compare = old_like
+    end
+
+    it "compares with insensitivity (function)" do
+      old_like, ActiveRecord::HashOptions.use_like_for_compare = ActiveRecord::HashOptions.use_like_for_compare, false
+
+      expect(filter(collection, :name => insensitive('Big'))).to match_array([big, big2])
+    ensure
+      ActiveRecord::HashOptions.use_like_for_compare = old_like
+    end
+
+    it "compares with insensitivity (long)" do
+      expect(filter(collection, :name => ActiveRecord::HashOptions::INSENSITIVE('Big'))).to match_array([big, big2])
     end
 
     it "compares with ilike" do
@@ -117,6 +168,14 @@ RSpec.describe ActiveRecord::HashOptions do
         expect(filter(collection, :name => ilike('%big%'))).to match_array([big, big2])
       else
         expect(filter(collection, :name => ilike('%big%'))).to match_array([big])
+      end
+    end
+
+    it "compares with ilike (long)" do
+      if case_insensitive_like?
+        expect(filter(collection, :name => ActiveRecord::HashOptions::ILIKE('%big%'))).to match_array([big, big2])
+      else
+        expect(filter(collection, :name => ActiveRecord::HashOptions::ILIKE('%big%'))).to match_array([big])
       end
     end
 
@@ -128,8 +187,20 @@ RSpec.describe ActiveRecord::HashOptions do
       end
     end
 
+    it "compares with like (long)" do
+      if case_sensitive_like?
+        expect(filter(collection, :name => ActiveRecord::HashOptions::LIKE('%big%'))).to eq([big])
+      else
+        expect(filter(collection, :name => ActiveRecord::HashOptions::LIKE('%big%'))).to match_array([big, big2])
+      end
+    end
+
     it "compares with not_like" do
       expect(filter(collection, :name => not_like('%small%'))).to match_array([big, big2])
+    end
+
+    it "compares with like (long)" do
+      expect(filter(collection, :name => ActiveRecord::HashOptions::NOT_LIKE('%small%'))).to eq([big, big2])
     end
 
     it "compares with starts_with" do
@@ -194,6 +265,17 @@ RSpec.describe ActiveRecord::HashOptions do
       end
     end
 
+    # this is academic - people won't use this interface
+    it "compares with regexp case sensitive (long)" do
+      skip("db does not support regexps") unless supports_regex?
+
+      if case_sensitive?
+        expect(filter(collection, :name => ActiveRecord::HashOptions::REGEXP.new(/^bi*g/))).to match_array([big])
+      else
+        expect(filter(collection, :name => ActiveRecord::HashOptions::REGEXP.new(/^bi*g/))).to match_array([big, big2])
+      end
+    end
+
     it "compares with regexp case insensitive" do
       skip("db does not support regexps") unless supports_regex?
 
@@ -204,8 +286,30 @@ RSpec.describe ActiveRecord::HashOptions do
       end
     end
 
-    it "compares with regexp case insensitive (=)" do
-      expect(filter(collection, :name => /^BIG$/i)).to match_array([big, big2])
+    it "compares with case sensitive (=)" do
+      if case_sensitive?
+        expect(filter(collection, :name => /^BIG$/)).to match_array([big2])
+      else
+        expect(filter(collection, :name => /^BIG$/)).to match_array([big, big2])
+      end
+    end
+
+    it "compares with regexp case insensitive (=, like)" do
+      skip "db does not support case insensitive like" unless case_insensitive_like?
+
+      old_like, ActiveRecord::HashOptions.use_like_for_compare = ActiveRecord::HashOptions.use_like_for_compare, true
+
+      expect(filter(collection, :name => /^Big$/i)).to match_array([big, big2])
+    ensure
+      ActiveRecord::HashOptions.use_like_for_compare = old_like
+    end
+
+    it "compares with insensitivity (=, function)" do
+      old_like, ActiveRecord::HashOptions.use_like_for_compare = ActiveRecord::HashOptions.use_like_for_compare, false
+
+      expect(filter(collection, :name => /^Big$/i)).to match_array([big, big2])
+    ensure
+      ActiveRecord::HashOptions.use_like_for_compare = old_like
     end
   end
 
