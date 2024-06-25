@@ -32,16 +32,17 @@ class Database
   def migrate
     ActiveRecord::Migration.verbose = false
 
-    config_contents = ERB.new(IO.read("#{dirname}/database.yml")).result
-    ActiveRecord::Base.configurations = all_config = if YAML.respond_to?(:safe_load)
-      YAML.safe_load(config_contents, aliases: true)
-    else
-      YAML.load(config_contents)
-    end
+    config_contents = ERB.new(File.read("#{dirname}/database.yml")).result
+    ActiveRecord::Base.configurations = all_config =
+      if YAML.respond_to?(:safe_load)
+        YAML.safe_load(config_contents, :aliases => true)
+      else
+        YAML.load(config_contents) # rubocop:disable Security/YAMLLoad
+      end
     config = all_config[adapter]
     if config.blank?
-      $stderr.puts "","","ERROR: Could not find '#{adapter}' in #{filename}"
-      $stderr.puts "Pick from: #{all_config.keys.join(", ")}", "", ""
+      warn "", "", "ERROR: Could not find '#{adapter}' in database.yml"
+      warn "Pick from: #{all_config.keys.join(", ")}", "", ""
       exit(1)
     end
     if ActiveRecord::VERSION::MAJOR >= 6
