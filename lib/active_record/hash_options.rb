@@ -76,7 +76,7 @@ module ActiveRecord
     end
 
     def self.filter(scope_or_array, conditions, negate = false) # rubocop:disable Style/OptionalBooleanParameter
-      if scope_or_array.kind_of?(Array)
+      if scope_or_array.kind_of?(Array) || scope_or_array.kind_of?(ActiveRecord::HashOptions::Enumerable)
         filter_array(scope_or_array, conditions, negate)
       else
         filter_scope(scope_or_array, conditions, negate)
@@ -127,7 +127,7 @@ module ActiveRecord
           actual_val.match(value)
         end
       when Array
-        if actual_value.nil?
+        if actual_val.nil?
           value.include?(nil) ? true : nil # treat as IS NULL
         else
           value.include?(actual_val)
