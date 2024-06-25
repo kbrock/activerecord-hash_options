@@ -63,7 +63,7 @@ module ActiveRecord
         source.gsub!(/(?<![\\])%%+/, '%')
         # can leave '\.' escaped, but fix []'
         # only suggest a like or equals if we've removed all regular expression stuff
-        source unless source =~ /[\[\]()*{}]/
+        source unless /[\[\]()*{}]/.match?(source)
       end
 
       # if it is simple enough, just use a regular sql like clause. or even an =
@@ -73,7 +73,7 @@ module ActiveRecord
 
         if source.nil?
           ["~", case_sensitive, regex.source]
-        elsif source !~ /([^\\]|^)[%_]/
+        elsif !/([^\\]|^)[%_]/.match?(source)
           ["=", case_sensitive, source]
         else
           ["like", case_sensitive, source]

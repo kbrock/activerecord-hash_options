@@ -33,7 +33,7 @@ module ActiveRecord
     # please call after a database connection has been established
     def self.detect(connection, driver)
       # only need to force this for mysql - otherwise it detects strange values
-      collation = connection.try(:collation) if driver =~ /mysql/
+      collation = connection.try(:collation) if driver.include?("mysql")
 
       # a like 'A' (please respect case) - returns false if respects case
       self.sensitive_like = !detect_boolean(Arel::Nodes::Matches.new(quote('a'), quote("A"), nil, true), connection, collation)
@@ -117,7 +117,7 @@ module ActiveRecord
         if actual_val.nil?
           nil
         else
-          !!(actual_val =~ value)
+          actual_val.match(value)
         end
       when Array
         if actual_value.nil?
@@ -155,8 +155,7 @@ module ActiveRecord
     def self.detect_boolean(clause, connection, collation = nil)
       clause = Arel::Nodes::SqlLiteral.new("#{clause.to_sql} COLLATE #{collation}") if collation
       sql = Arel::Nodes::SelectCore.new.tap { |sc| sc.projections << clause }
-      ret = connection.select_value(sql)
-      (ret == 1 || ret == true)
+      [1, true].include?(connection.select_value(sql))
     rescue NotImplementedError
       false
     end
