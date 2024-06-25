@@ -1,16 +1,11 @@
 # ActiveRecord::HashOptions
 
-## Stalled
-
-This is stalled because it is too hard to implement string comparisions that are the same in the database and in sql.
-The solution will probably be simple but needs to be done. Definintely need to use the same locale for ruby as we are using in the database.
-
 ## What is it?
 
 This enhances active record so that it can be used in more cases
 than the pure equality case.
 
-### Equality only
+### Equality only - SOLVED
 
 Active record hash syntax only support equality.
 For things like case insensitivity or regular expression matching, arel is needed.
