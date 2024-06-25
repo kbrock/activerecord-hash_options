@@ -5,7 +5,7 @@ module ActiveRecord
   module HashOptions
     module Enumerable
       def where(conditions = :chain)
-        if :chain == conditions
+        if conditions == :chain
           ActiveRecord::HashOptions::Enumerable::NotChain.new(self)
         else
           ActiveRecord::HashOptions.filter(self, conditions, false)

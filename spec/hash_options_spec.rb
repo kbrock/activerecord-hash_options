@@ -219,8 +219,9 @@ RSpec.describe ActiveRecord::HashOptions do
     end
 
     it "compares with not_compound" do
+      # rails >=6.1 logic:
       # ! (name = small && value >= 100) --> name != small || value > 10
-      expect(filter(collection, {:name => ilike('%small%'), :value => lte(10)}, true)).to eq([big2])
+      expect(filter(collection, {:name => ilike('%small%'), :value => lte(10)}, true)).to eq([big, big2])
     end
   end
 
@@ -272,13 +273,7 @@ RSpec.describe ActiveRecord::HashOptions do
   # this is typically called via:
   #   ActiveRecord::HashOptions.filter(collection, conditions, negate)
   # although there are many ways to reduce the typing - see the readme.
-  def filter(collection, conditions, negate = false)
-    if negate
-      conditions.inject(collection) do |a, (key, value)|
-        a.where.not(key => value)
-      end
-    else
-      collection.where(conditions)
-    end
+  def filter(collection, conditions, negate = false) # rubocop:disable Style/OptionalBooleanParameter
+    ActiveRecord::HashOptions.filter(collection, conditions, negate)
   end
 end

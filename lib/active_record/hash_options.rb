@@ -94,12 +94,16 @@ module ActiveRecord
     #   false
     #   nil (false for both)
     def self.filter_array(array, conditions, negate)
+      # rails <= 6.0, negation NOR:
+      # method = :all?
+      # rails >= 6.1, negation uses NAND:
+      method = negate ? :any? : :all?
       array.select do |rec|
-        conditions.all? do |name, value|
+        conditions.send(method) do |name, value|
           actual_val = rec.send(name)
           case compare_array_column(actual_val, value)
           when nil # compare with nil is never true
-            false
+            nil
           when false
             negate
           else
