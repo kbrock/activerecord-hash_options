@@ -1,6 +1,16 @@
+if ENV['CI']
+  require 'simplecov'
+  SimpleCov.start do
+    add_filter "/spec/"
+    enable_coverage :branch
+    primary_coverage :branch
+  end
+end
+
 require 'bundler/setup'
 require 'active_record'
 require 'active_record/hash_options'
+
 Dir['./spec/support/**/*.rb'].sort.each { |f| require f }
 
 RSpec.configure do |config|
@@ -21,7 +31,7 @@ RSpec.configure do |config|
     config.default_formatter = "doc"
   end
 
-  # not optimal, but all tests can use the ':column => gt()' syntax
+  # not optimal, but allows tests to use short syntax ':column => gt()'
   config.include ActiveRecord::HashOptions::Helpers
 
   config.profile_examples = ENV["RSPEC_EXAMPLES"].to_i if ENV["RSPEC_EXAMPLES"].to_s.present?
