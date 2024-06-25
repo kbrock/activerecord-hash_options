@@ -1,6 +1,8 @@
 # frozen_string_literal: true
+
 module ActiveRecord
   module HashOptions
+    # rubocop:disable Style/SingleLineMethods
     module Helpers
       # numeric
       def gt(val); ActiveRecord::HashOptions::GT.new(val); end
@@ -11,12 +13,13 @@ module ActiveRecord
       # string
       def insensitive(val); ActiveRecord::HashOptions::INSENSITIVE.new(val); end
 
-      def starts_with(val) ; ActiveRecord::HashOptions::LIKE.new("#{val}%"); end
-      def ends_with(val) ; ActiveRecord::HashOptions::LIKE.new("%#{val}"); end
-      def contains(val) ; ActiveRecord::HashOptions::LIKE.new("%#{val}%"); end
-      def not_like(val) ; ActiveRecord::HashOptions::NOT_LIKE.new(val); end
+      def starts_with(val); ActiveRecord::HashOptions::LIKE.new("#{val}%"); end
+      def ends_with(val); ActiveRecord::HashOptions::LIKE.new("%#{val}"); end
+      def contains(val); ActiveRecord::HashOptions::LIKE.new("%#{val}%"); end
+      def not_like(val); ActiveRecord::HashOptions::NOT_LIKE.new(val); end
       def like(val); ActiveRecord::HashOptions::LIKE.new(val); end
       def ilike(val); ActiveRecord::HashOptions::ILIKE.new(val); end
     end
+    # rubocop:enable Style/SingleLineMethods
   end
 end

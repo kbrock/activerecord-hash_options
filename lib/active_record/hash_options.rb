@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require "active_record/hash_options/version"
 require "active_record/hash_options/operators"
 require "active_record/hash_options/operators/regexp"
@@ -47,10 +48,12 @@ module ActiveRecord
     end
 
     def self.extended(mod)
+      super
       ActiveRecord::HashOptions.register_my_handler(mod)
     end
 
     def self.inherited(mod)
+      super
       ActiveRecord::HashOptions.register_my_handler(mod)
     end
 
@@ -72,7 +75,7 @@ module ActiveRecord
       end
     end
 
-    def self.filter(scope_or_array, conditions, negate = false)
+    def self.filter(scope_or_array, conditions, negate = false) # rubocop:disable Style/OptionalBooleanParameter
       if scope_or_array.kind_of?(Array)
         filter_array(scope_or_array, conditions, negate)
       else
@@ -125,13 +128,9 @@ module ActiveRecord
         end
       when Array
         if actual_value.nil?
-          if value.include?(nil) # treat as IS NULL
-            true
-          else
-            nil
-          end
+          value.include?(nil) ? true : nil # treat as IS NULL
         else
-          !!value.include?(actual_val)
+          value.include?(actual_val)
         end
       when Range
         if actual_val.nil?
@@ -143,18 +142,12 @@ module ActiveRecord
         value.call(actual_val)
       else # NilClass, String, Integer
         if actual_val.nil?
-          if value.nil? # treat as IS NULL
-            true
-          else
-            nil
-          end
+          value.nil? ? true : nil # treat as IS NULL
         else
           actual_val == value
         end
       end
     end
-
-    private
 
     def self.detect_boolean(clause, connection, collation = nil)
       clause = Arel::Nodes::SqlLiteral.new("#{clause.to_sql} COLLATE #{collation}") if collation
@@ -163,9 +156,11 @@ module ActiveRecord
     rescue NotImplementedError
       false
     end
+    private_class_method :detect_boolean
 
     def self.quote(str)
       Arel::Nodes.build_quoted(str)
     end
+    private_class_method :quote
   end
 end

@@ -14,7 +14,7 @@ module ActiveRecord
             if case_sensitive || !ActiveRecord::HashOptions.sensitive_compare
               Arel::Nodes::Equality.new(column, Arel::Nodes.build_quoted(source))
             else
-              Arel::Nodes::Equality.new(Arel::Nodes::NamedFunction.new("LOWER", [column]), Arel::Nodes.build_quoted(source.downcase.gsub(/\\/, "")))
+              Arel::Nodes::Equality.new(Arel::Nodes::NamedFunction.new("LOWER", [column]), Arel::Nodes.build_quoted(source.downcase.delete("\\")))
             end
           when 'like'
             # NOTE: when ActiveRecord::HashOptions.sensitive_like is false, case_sensitive is ignored and basically false
@@ -43,8 +43,8 @@ module ActiveRecord
         return if source =~ /([^.]\*|\[.{2,}\])/
 
         # convert anchors into wild characters
-        source = (source[0] == "^")  ? source[1..-1] : "%#{source}"
-        source = (source[-1] == "$") ? source[0..-2] : "#{source}%"
+        source = source[0] == "^"  ? source[1..] : "%#{source}"
+        source = source[-1] == "$" ? source[0..-2] : "#{source}%"
 
         # don't want to modify the regex, and unfreeze the anchor conversions
         source = source.dup
@@ -68,7 +68,7 @@ module ActiveRecord
 
       # if it is simple enough, just use a regular sql like clause. or even an =
       def self.convert_regex(regex)
-        case_sensitive = !(regex.options & Regexp::IGNORECASE > 0)
+        case_sensitive = !(regex.options & Regexp::IGNORECASE > 0) # rubocop:disable Style/InverseMethods
         source = regex_to_like(regex)
 
         if source.nil?

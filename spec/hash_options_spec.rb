@@ -1,5 +1,3 @@
-Array.send(:include, ActiveRecord::HashOptions::Enumerable)
-
 RSpec.describe ActiveRecord::HashOptions do
   before do
     Table1.destroy_all
@@ -224,7 +222,6 @@ RSpec.describe ActiveRecord::HashOptions do
       expect(filter(collection, {:name => ilike('%small%'), :value => lte(10)}, true)).to eq([big, big2])
     end
   end
-
 
   ############################## Base tests ##############################
 
