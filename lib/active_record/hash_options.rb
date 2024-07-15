@@ -136,7 +136,7 @@ module ActiveRecord
         if actual_val.nil?
           nil
         else
-          !!value.cover?(actual_val)
+          value.cover?(actual_val)
         end
       when ActiveRecord::HashOptions::GenericOp
         value.call(actual_val)
