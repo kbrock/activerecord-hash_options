@@ -74,7 +74,7 @@ module ActiveRecord
         # this line is part of the where(:col => REGEXP.new()) interface compatibility:
         regex = regex.expression if regex.kind_of?(self)
 
-        case_sensitive = !(regex.options & Regexp::IGNORECASE > 0) # rubocop:disable Style/InverseMethods
+        case_sensitive = regex.options & Regexp::IGNORECASE == 0
         source = regex_to_like(regex)
 
         if source.nil?
