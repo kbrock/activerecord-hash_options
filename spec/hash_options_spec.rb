@@ -288,6 +288,12 @@ RSpec.describe ActiveRecord::HashOptions do
       end
     end
 
+    it "compares with regexp case ignore" do
+      skip("db does not support regexps") unless supports_regex?
+
+      expect(filter(collection, :name => /^(b|B)(i|I)(g|G)/)).to match_array([big, big2])
+    end
+
     # this is academic - people won't use this interface
     it "compares with regexp case sensitive (long)" do
       skip("db does not support regexps") unless supports_regex?
