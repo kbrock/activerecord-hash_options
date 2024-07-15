@@ -50,11 +50,10 @@ module ActiveRecord
     def self.extended(mod)
       super
       ActiveRecord::HashOptions.register_my_handler(mod)
-    end
-
-    def self.inherited(mod)
-      super
-      ActiveRecord::HashOptions.register_my_handler(mod)
+      mod.define_singleton_method(:inherited) do |mod|
+        super(mod)
+        ActiveRecord::HashOptions.register_my_handler(mod)
+      end
     end
 
     def self.register_my_handler(mod)

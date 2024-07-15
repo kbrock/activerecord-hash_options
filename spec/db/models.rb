@@ -14,6 +14,7 @@ end
 
 # test inheritance
 class TableC < Table1
+  # this should trigger inheritence
 end
 
 # don't do this

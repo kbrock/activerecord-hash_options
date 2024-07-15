@@ -1,12 +1,15 @@
 RSpec.describe ActiveRecord::HashOptions do
   before do
-    Table1.destroy_all
+    model.destroy_all
   end
 
-  let!(:small) { Table1.create(:name => "small", :value => 1) }
-  let!(:big)   { Table1.create(:name => "big", :value => 10) }
-  let!(:big2)  { Table1.create(:name => "BIG", :value => 100) }
-  let!(:bad)   { Table1.create(:name => nil, :value => nil) }
+  # for array, we override. but for db, just use the db class
+  let(:model) { collection }
+
+  let!(:small) { model.create(:name => "small", :value => 1) }
+  let!(:big)   { model.create(:name => "big", :value => 10) }
+  let!(:big2)  { model.create(:name => "BIG", :value => 100) }
+  let!(:bad)   { model.create(:name => nil, :value => nil) }
 
   ########## scopes embedded in the model ##########
 
@@ -350,6 +353,7 @@ RSpec.describe ActiveRecord::HashOptions do
   ############################## Base tests ##############################
 
   describe "Array" do
+    let(:model) { Table1 }
     let(:collection) { Table1.all.to_a }
 
     it_should_behave_like "numeric comparable"
@@ -366,6 +370,13 @@ RSpec.describe ActiveRecord::HashOptions do
     it_should_behave_like "string comparable"
     it_should_behave_like "regexp comparable"
     it_should_behave_like "compound comparable"
+  end
+
+  describe "Child database table" do
+    let(:collection) { TableC }
+
+    # could do them all, but just checking one for now
+    it_should_behave_like "string comparable"
   end
 
   private
