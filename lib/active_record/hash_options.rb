@@ -140,9 +140,11 @@ module ActiveRecord
         end
       when ActiveRecord::HashOptions::GenericOp
         value.call(actual_val)
-      else # NilClass, String, Integer
+      when NilClass
+        actual_val.nil? # treat as IS NULL
+      else # String, Integer
         if actual_val.nil?
-          value.nil? ? true : nil # treat as IS NULL
+          nil
         else
           actual_val == value
         end
