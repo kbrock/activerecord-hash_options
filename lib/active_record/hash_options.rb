@@ -115,38 +115,29 @@ module ActiveRecord
       end
     end
 
-    # returns true, false, or nil (the comparison is unknown)
+    # returns true, false, or nil (meaning the comparison is unknown - regardless of negation, this is false)
     # remember, this is sql based, null == "x" and null != "x" are both false
     def self.compare_array_column(actual_val, value)
+      # typically, when actual_value is a nil, return nil (the comparison is unknown)
+      ret = actual_val.nil? ? nil : true
       case value
       when Regexp
-        if actual_val.nil?
-          nil
-        else
-          actual_val.match(value)
-        end
+        ret && actual_val.match(value)
       when Array
-        if actual_val.nil?
-          value.include?(nil) ? true : nil # treat as IS NULL
-        else
-          value.include?(actual_val)
-        end
+        # doing value search first b/c
+        #   if value.nil? && actual_val.nil? - then treat as null IS NULL => true
+        #   otherwise if ret.nil? (aka actual_val.nil?) then nil,
+        #     otherwise regular compare with no match => false
+        value.include?(actual_val) || (ret && false)
       when Range
-        if actual_val.nil?
-          nil
-        else
-          value.cover?(actual_val)
-        end
+        ret && value.cover?(actual_val)
       when ActiveRecord::HashOptions::GenericOp
         value.call(actual_val)
       when NilClass
-        actual_val.nil? # treat as IS NULL
+        # treat as IS NULL
+        actual_val.nil? 
       else # String, Integer
-        if actual_val.nil?
-          nil
-        else
-          actual_val == value
-        end
+        ret && actual_val == value
       end
     end
 
