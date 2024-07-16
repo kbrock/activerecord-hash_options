@@ -50,11 +50,10 @@ module ActiveRecord
     def self.extended(mod)
       super
       ActiveRecord::HashOptions.register_my_handler(mod)
-    end
-
-    def self.inherited(mod)
-      super
-      ActiveRecord::HashOptions.register_my_handler(mod)
+      mod.define_singleton_method(:inherited) do |mod|
+        super(mod)
+        ActiveRecord::HashOptions.register_my_handler(mod)
+      end
     end
 
     def self.register_my_handler(mod)
@@ -136,13 +135,15 @@ module ActiveRecord
         if actual_val.nil?
           nil
         else
-          !!value.cover?(actual_val)
+          value.cover?(actual_val)
         end
       when ActiveRecord::HashOptions::GenericOp
         value.call(actual_val)
-      else # NilClass, String, Integer
+      when NilClass
+        actual_val.nil? # treat as IS NULL
+      else # String, Integer
         if actual_val.nil?
-          value.nil? ? true : nil # treat as IS NULL
+          nil
         else
           actual_val == value
         end
@@ -150,10 +151,12 @@ module ActiveRecord
     end
 
     def self.detect_boolean(clause, connection, collation = nil)
+      # mysql uses collation
       clause = Arel::Nodes::SqlLiteral.new("#{clause.to_sql} COLLATE #{collation}") if collation
       sql = Arel::Nodes::SelectCore.new.tap { |sc| sc.projections << clause }
       [1, true].include?(connection.select_value(sql))
     rescue NotImplementedError
+      # sqlite does not support regular expressions
       false
     end
     private_class_method :detect_boolean

@@ -18,68 +18,71 @@ module ActiveRecord
           op_expression
         end
       end
+
+      def self.arel_proc(column, op, klass)
+        op.expression.nil? ? Arel::Nodes::False.new : klass.new(column, GenericOp.quote(op.expression, column))
+      end
+
+      def cmp(val)
+        return nil if val.nil? || expression.nil?
+
+        yield(val, expression)
+      end
     end
 
     class GT < GenericOp
       def self.arel_proc
-        proc { |column, op| Arel::Nodes::GreaterThan.new(column, GenericOp.quote(op.expression, column)) }
+        proc { |column, op| super(column, op, Arel::Nodes::GreaterThan) }
       end
 
       def call(val)
-        val.nil? ? nil : val > expression
+        cmp(val) { |a, b| a > b }
       end
     end
 
     class LT < GenericOp
       def self.arel_proc
-        proc { |column, op| Arel::Nodes::LessThan.new(column, GenericOp.quote(op.expression, column)) }
+        proc { |column, op| super(column, op, Arel::Nodes::LessThan) }
       end
 
       def call(val)
-        val.nil? ? nil : val < expression
+        cmp(val) { |a, b| a < b }
       end
     end
 
     class GTE < GenericOp
       def self.arel_proc
-        proc { |column, op| Arel::Nodes::GreaterThanOrEqual.new(column, GenericOp.quote(op.expression, column)) }
+        proc { |column, op| super(column, op, Arel::Nodes::GreaterThanOrEqual) }
       end
 
       def call(val)
-        val.nil? ? nil : val >= expression
+        cmp(val) { |a, b| a >= b }
       end
     end
 
     class LTE < GenericOp
       def self.arel_proc
-        proc { |column, op| Arel::Nodes::LessThanOrEqual.new(column, GenericOp.quote(op.expression, column)) }
+        proc { |column, op| super(column, op, Arel::Nodes::LessThanOrEqual) }
       end
 
       def call(val)
-        val.nil? ? nil : val <= expression
+        cmp(val) { |a, b| a <= b }
       end
     end
 
     class INSENSITIVE < GenericOp
       def self.arel_proc
         proc do |column, op|
-          if ActiveRecord::HashOptions.use_like_for_compare
-            Arel::Nodes::Matches.new(column, GenericOp.quote(op.expression, column), nil, false)
-          else
-            lower_column = Arel::Nodes::NamedFunction.new("LOWER", [column])
-            Arel::Nodes::Equality.new(lower_column, GenericOp.quote(op.expression.downcase, column))
-          end
+          REGEXP.gen_sql(column, "=", false, op.expression)
         end
       end
 
       def call(val)
-        # a little odd to case insensitive compare with nil.
-        # but it seems possible that this may come out of a regular expression translation
-        if val.nil?
-          expression.nil? ? true : nil
-        else
-          val.downcase == expression&.downcase
-        end
+        # a little odd to case insensitive compare with nil
+        # both nil is treated as (null) IS NULL
+        return true if val.nil? && expression.nil?
+
+        cmp(val) { |a, b| a.downcase == b.downcase }
       end
     end
 
@@ -96,7 +99,7 @@ module ActiveRecord
       end
 
       def call(val)
-        val.nil? ? nil : !!(val =~ expression2)
+        cmp(val) { |a, b| expression2.match?(a) }
       end
 
       # escape . * ^ $ (this.gif => this[.]gif - so it won't match this_gif)
@@ -120,7 +123,7 @@ module ActiveRecord
       end
 
       def call(val)
-        val.nil? ? nil : !!(val !~ expression2)
+        cmp(val) { |a, b| !expression2.match?(a) }
       end
     end
 

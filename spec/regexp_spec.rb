@@ -83,4 +83,10 @@ RSpec.describe ActiveRecord::HashOptions::REGEXP do
       expect(described_class.convert_regex(/^a\%b$/)).to eq(["=", true, "a\\%b"]) # rubocop:disable Style/RedundantRegexpEscape
     end
   end
+
+  describe "#gen_sql" do
+    # convert_regex only returns 3 modes: "~", "=", "like"
+    # TBH/ only adding this for code coverage reasons
+    it { expect { described_class.gen_sql("src", "bad mode", true, "dest") }.to raise_error(RuntimeError, /Unknown regular expression expansion.*/)}
+  end
 end

@@ -1,12 +1,15 @@
 RSpec.describe ActiveRecord::HashOptions do
   before do
-    Table1.destroy_all
+    model.destroy_all
   end
 
-  let!(:small) { Table1.create(:name => "small", :value => 1) }
-  let!(:big)   { Table1.create(:name => "big", :value => 10) }
-  let!(:big2)  { Table1.create(:name => "BIG", :value => 100) }
-  let!(:bad)   { Table1.create(:name => nil, :value => nil) }
+  # for array, we override. but for db, just use the db class
+  let(:model) { collection }
+
+  let!(:small) { model.create(:name => "small", :value => 1) }
+  let!(:big)   { model.create(:name => "big", :value => 10) }
+  let!(:big2)  { model.create(:name => "BIG", :value => 100) }
+  let!(:bad)   { model.create(:name => nil, :value => nil) }
 
   ########## scopes embedded in the model ##########
 
@@ -31,12 +34,20 @@ RSpec.describe ActiveRecord::HashOptions do
       expect(filter(collection, :value => gt(10))).to eq([big2])
     end
 
+    it "compares with gt null" do
+      expect(filter(collection, :value => gt(nil))).to be_empty
+    end
+
     it "compares with gt (long)" do
       expect(filter(collection, :value => ActiveRecord::HashOptions::GT(10))).to eq([big2])
     end
 
     it "compares with gte" do
       expect(filter(collection, :value => gte(10))).to match_array([big, big2])
+    end
+
+    it "compares with gte null" do
+      expect(filter(collection, :value => gte(nil))).to be_empty
     end
 
     it "compares with gte (long)" do
@@ -47,12 +58,20 @@ RSpec.describe ActiveRecord::HashOptions do
       expect(filter(collection, :value => lt(10))).to eq([small])
     end
 
+    it "compares with lt null" do
+      expect(filter(collection, :value => lt(nil))).to be_empty
+    end
+
     it "compares with lt (long)" do
       expect(filter(collection, :value => ActiveRecord::HashOptions::LT(10))).to eq([small])
     end
 
     it "compares with lte" do
       expect(filter(collection, :value => lte(10))).to match_array([small, big])
+    end
+
+    it "compares with lte null" do
+      expect(filter(collection, :value => lte(nil))).to be_empty
     end
 
     it "compares with lte (long)" do
@@ -163,6 +182,10 @@ RSpec.describe ActiveRecord::HashOptions do
       expect(filter(collection, :name => ActiveRecord::HashOptions::INSENSITIVE('Big'))).to match_array([big, big2])
     end
 
+    it "compares with insensitivity nil" do
+      expect(filter(collection, :name => insensitive(nil))).to eq([bad])
+    end
+
     it "compares with ilike" do
       if case_insensitive_like?
         expect(filter(collection, :name => ilike('%big%'))).to match_array([big, big2])
@@ -265,6 +288,12 @@ RSpec.describe ActiveRecord::HashOptions do
       end
     end
 
+    it "compares with regexp case ignore" do
+      skip("db does not support regexps") unless supports_regex?
+
+      expect(filter(collection, :name => /^(b|B)(i|I)(g|G)/)).to match_array([big, big2])
+    end
+
     # this is academic - people won't use this interface
     it "compares with regexp case sensitive (long)" do
       skip("db does not support regexps") unless supports_regex?
@@ -311,6 +340,16 @@ RSpec.describe ActiveRecord::HashOptions do
     ensure
       ActiveRecord::HashOptions.use_like_for_compare = old_like
     end
+
+    it "compares with insensitivity (=, function) and punctuation" do
+      # specifically testing the slash in query that resolves to a function
+      old_like, ActiveRecord::HashOptions.use_like_for_compare = ActiveRecord::HashOptions.use_like_for_compare, false
+
+      punctuation = model.create(:name => 'big%data')
+      expect(filter(collection, :name => /^big\%data$/i)).to match_array([punctuation])
+    ensure
+      ActiveRecord::HashOptions.use_like_for_compare = old_like
+    end
   end
 
   ########## compound expressions ##########
@@ -330,6 +369,7 @@ RSpec.describe ActiveRecord::HashOptions do
   ############################## Base tests ##############################
 
   describe "Array" do
+    let(:model) { Table1 }
     let(:collection) { Table1.all.to_a }
 
     it_should_behave_like "numeric comparable"
@@ -346,6 +386,13 @@ RSpec.describe ActiveRecord::HashOptions do
     it_should_behave_like "string comparable"
     it_should_behave_like "regexp comparable"
     it_should_behave_like "compound comparable"
+  end
+
+  describe "Child database table" do
+    let(:collection) { TableC }
+
+    # could do them all, but just checking one for now
+    it_should_behave_like "string comparable"
   end
 
   private

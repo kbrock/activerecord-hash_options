@@ -6,22 +6,31 @@ module ActiveRecord
       def self.arel_proc
         proc do |column, op|
           mode, case_sensitive, source = convert_regex(op)
-          mode = "like" if mode == "=" && !case_sensitive && ActiveRecord::HashOptions.use_like_for_compare
-          # when sensitive_compare == false, we do not respect case_sensitive for equality
-          # good: we can skip the fn hack. bad: we can never get simple equality working
-          mode = "fn"   if mode == "=" && !case_sensitive && ActiveRecord::HashOptions.sensitive_compare
+          gen_sql(column, mode, case_sensitive, source)
+        end
+      end
 
-          case mode
-          when '='
-            Arel::Nodes::Equality.new(column, Arel::Nodes.build_quoted(source))
-          when 'fn'
-            Arel::Nodes::Equality.new(Arel::Nodes::NamedFunction.new("LOWER", [column]), Arel::Nodes.build_quoted(source.downcase.delete("\\")))
-          when 'like'
-            # NOTE: when ActiveRecord::HashOptions.sensitive_like is false, case_sensitive is ignored and basically false
-            Arel::Nodes::Matches.new(column, Arel::Nodes.build_quoted(source), nil, case_sensitive)
-          when '~'
-            Arel::Nodes::Regexp.new(column, Arel::Nodes.build_quoted(source), case_sensitive)
-          end
+      def self.gen_sql(column, mode, case_sensitive, source)
+        # 1. if source.nil? then we want mode: '=', and it will generate IS NULL.
+        #    build_quoted(nil) or nil yield the same results
+        # 2. When use_like_for_compare == true, then like handles insensitive (pg and ILIKE), otherwise use LOWER fn
+        mode = "like" if source && mode == "=" && !case_sensitive && ActiveRecord::HashOptions.use_like_for_compare
+        # 3. when sensitive_compare == false, we do not respect case_sensitive for equality
+        #    good: we can skip the fn hack. bad: we can never get simple equality working
+        mode = "fn"   if source && mode == "=" && !case_sensitive && ActiveRecord::HashOptions.sensitive_compare
+
+        case mode
+        when '='
+          Arel::Nodes::Equality.new(column, Arel::Nodes.build_quoted(source))
+        when 'fn'
+          Arel::Nodes::Equality.new(Arel::Nodes::NamedFunction.new("LOWER", [column]), Arel::Nodes.build_quoted(source.downcase.delete("\\")))
+        when 'like'
+          # NOTE: when ActiveRecord::HashOptions.sensitive_like is false, case_sensitive is ignored and basically false
+          Arel::Nodes::Matches.new(column, Arel::Nodes.build_quoted(source), nil, case_sensitive)
+        when '~'
+          Arel::Nodes::Regexp.new(column, Arel::Nodes.build_quoted(source), case_sensitive)
+        else
+          raise "Unknown regular expression expansion: #{mode} #{source}"
         end
       end
 
@@ -74,7 +83,7 @@ module ActiveRecord
         # this line is part of the where(:col => REGEXP.new()) interface compatibility:
         regex = regex.expression if regex.kind_of?(self)
 
-        case_sensitive = !(regex.options & Regexp::IGNORECASE > 0) # rubocop:disable Style/InverseMethods
+        case_sensitive = regex.options & Regexp::IGNORECASE == 0
         source = regex_to_like(regex)
 
         if source.nil?

@@ -14,12 +14,15 @@ end
 
 # test inheritance
 class TableC < Table1
+  # this should trigger inheritence
 end
 
 # don't do this
 # do Array.send(:include, ActiveRecord::HashOptions::Enumerable)
 # I wanted to not corrupt array so I did this
 class TestArray < Array
+  # this is a no-op
+  extend ActiveRecord::HashOptions
   include ActiveRecord::HashOptions::Enumerable
 
   def initialize(values)

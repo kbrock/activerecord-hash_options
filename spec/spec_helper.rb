@@ -1,5 +1,9 @@
 if ENV['CI']
   require 'simplecov'
+  # mysql, sqlite, and pg take different routes
+  # each tests different paths. This allows us to consolidate
+  SimpleCov.use_merging(true)
+  SimpleCov.command_name "#{SimpleCov.command_name}-#{ENV.fetch("DB", "sqlite")}"
   SimpleCov.start do
     add_filter "/spec/"
     enable_coverage :branch
