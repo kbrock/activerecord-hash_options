@@ -47,7 +47,7 @@ jobs:
     strategy:
       # fail-fast: false
       matrix:
-        activerecord: [70, 71]
+        activerecord: ["70", "71"]
         ruby: ["3.2"]
         # include:
           # - ruby: 2.7
@@ -69,7 +69,6 @@ jobs:
       MYSQL_PWD: password
       # for rails tests (from matrix)
       BUNDLE_GEMFILE: gemfiles/gemfile_${{ matrix.activerecord }}.gemfile
-      CC_TEST_REPORTER_ID: "${{ secrets.CC_TEST_REPORTER_ID }}"      
     steps:
       - name: checkout code
         uses: actions/checkout@v4
@@ -102,6 +101,8 @@ jobs:
           DB: sqlite3
         run: bundle exec rake
       - name: Report code coverage
+        env:
+          CC_TEST_REPORTER_ID: "${{ secrets.CC_TEST_REPORTER_ID }}"
         if: "${{ github.ref == 'refs/heads/master' && matrix.activerecord == '71' && matrix.ruby == '3.2' }}"
         continue-on-error: true
         uses: paambaati/codeclimate-action@v5
