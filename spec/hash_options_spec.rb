@@ -340,6 +340,16 @@ RSpec.describe ActiveRecord::HashOptions do
     ensure
       ActiveRecord::HashOptions.use_like_for_compare = old_like
     end
+
+    it "compares with insensitivity (=, function) and punctuation" do
+      # specifically testing the slash in query that resolves to a function
+      old_like, ActiveRecord::HashOptions.use_like_for_compare = ActiveRecord::HashOptions.use_like_for_compare, false
+
+      punctuation = model.create(:name => 'big%data')
+      expect(filter(collection, :name => /^big\%data$/i)).to match_array([punctuation])
+    ensure
+      ActiveRecord::HashOptions.use_like_for_compare = old_like
+    end
   end
 
   ########## compound expressions ##########
