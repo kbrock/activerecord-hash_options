@@ -36,14 +36,16 @@ module ActiveRecord
       # only need to force this for mysql - otherwise it detects strange values
       collation = connection.try(:collation) if driver.include?("mysql")
 
+      la = Arel::Nodes.build_quoted("a")
+      ua = Arel::Nodes.build_quoted("A")
       # a like 'A' (please respect case) - returns false if respects case
-      self.sensitive_like = !detect_boolean(Arel::Nodes::Matches.new(quote('a'), quote("A"), nil, true), connection, collation)
+      self.sensitive_like = !detect_boolean(Arel::Nodes::Matches.new(la, ua, nil, true), connection, collation)
       # a like 'A' (please ignore case) - returns true if can ignore case
-      self.insensitive_like = detect_boolean(Arel::Nodes::Matches.new(quote('a'), quote('A'), nil, false), connection, collation)
+      self.insensitive_like = detect_boolean(Arel::Nodes::Matches.new(la, ua, nil, false), connection, collation)
       # # a = 'A' - returns false if respects case
-      self.sensitive_compare = !detect_boolean(Arel::Nodes::Equality.new(quote('a'), quote('A')), connection, collation)
+      self.sensitive_compare = !detect_boolean(Arel::Nodes::Equality.new(la, ua), connection, collation)
       # a ~ a - returns true if can use regular expressions
-      self.use_regex = detect_boolean(Arel::Nodes::Regexp.new(quote('a'), quote('a'), true), connection, collation)
+      self.use_regex = detect_boolean(Arel::Nodes::Regexp.new(la, la, true), connection, collation)
       self.use_like_for_compare = !sensitive_like
     end
 
@@ -151,10 +153,5 @@ module ActiveRecord
       false
     end
     private_class_method :detect_boolean
-
-    def self.quote(str)
-      Arel::Nodes.build_quoted(str)
-    end
-    private_class_method :quote
   end
 end
