@@ -69,15 +69,7 @@ module ActiveRecord
     class INSENSITIVE < GenericOp
       def self.arel_proc
         proc do |column, op|
-          if op.expression.nil?
-            # comparison with nil => 'IS NULL'
-            Arel::Nodes::Equality.new(column, nil)
-          elsif ActiveRecord::HashOptions.use_like_for_compare
-            Arel::Nodes::Matches.new(column, GenericOp.quote(op.expression, column), nil, false)
-          else
-            lower_column = Arel::Nodes::NamedFunction.new("LOWER", [column])
-            Arel::Nodes::Equality.new(lower_column, GenericOp.quote(op.expression.downcase, column))
-          end
+          REGEXP.gen_sql(column, "=", false, op.expression)
         end
       end
 
