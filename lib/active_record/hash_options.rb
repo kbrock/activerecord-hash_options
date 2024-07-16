@@ -36,14 +36,16 @@ module ActiveRecord
       # only need to force this for mysql - otherwise it detects strange values
       collation = connection.try(:collation) if driver.include?("mysql")
 
+      la = Arel::Nodes.build_quoted("a")
+      ua = Arel::Nodes.build_quoted("A")
       # a like 'A' (please respect case) - returns false if respects case
-      self.sensitive_like = !detect_boolean(Arel::Nodes::Matches.new(quote('a'), quote("A"), nil, true), connection, collation)
+      self.sensitive_like = !detect_boolean(Arel::Nodes::Matches.new(la, ua, nil, true), connection, collation)
       # a like 'A' (please ignore case) - returns true if can ignore case
-      self.insensitive_like = detect_boolean(Arel::Nodes::Matches.new(quote('a'), quote('A'), nil, false), connection, collation)
+      self.insensitive_like = detect_boolean(Arel::Nodes::Matches.new(la, ua, nil, false), connection, collation)
       # # a = 'A' - returns false if respects case
-      self.sensitive_compare = !detect_boolean(Arel::Nodes::Equality.new(quote('a'), quote('A')), connection, collation)
+      self.sensitive_compare = !detect_boolean(Arel::Nodes::Equality.new(la, ua), connection, collation)
       # a ~ a - returns true if can use regular expressions
-      self.use_regex = detect_boolean(Arel::Nodes::Regexp.new(quote('a'), quote('a'), true), connection, collation)
+      self.use_regex = detect_boolean(Arel::Nodes::Regexp.new(la, la, true), connection, collation)
       self.use_like_for_compare = !sensitive_like
     end
 
@@ -115,38 +117,29 @@ module ActiveRecord
       end
     end
 
-    # returns true, false, or nil (the comparison is unknown)
+    # returns true, false, or nil (meaning the comparison is unknown - regardless of negation, this is false)
     # remember, this is sql based, null == "x" and null != "x" are both false
     def self.compare_array_column(actual_val, value)
+      # typically, when actual_value is a nil, return nil (the comparison is unknown)
+      ret = actual_val.nil? ? nil : true
       case value
       when Regexp
-        if actual_val.nil?
-          nil
-        else
-          actual_val.match(value)
-        end
+        ret && actual_val.match(value)
       when Array
-        if actual_val.nil?
-          value.include?(nil) ? true : nil # treat as IS NULL
-        else
-          value.include?(actual_val)
-        end
+        # doing value search first b/c
+        #   if value.nil? && actual_val.nil? - then treat as null IS NULL => true
+        #   otherwise if ret.nil? (aka actual_val.nil?) then nil,
+        #     otherwise regular compare with no match => false
+        value.include?(actual_val) || (ret && false)
       when Range
-        if actual_val.nil?
-          nil
-        else
-          value.cover?(actual_val)
-        end
+        ret && value.cover?(actual_val)
       when ActiveRecord::HashOptions::GenericOp
         value.call(actual_val)
       when NilClass
-        actual_val.nil? # treat as IS NULL
+        # treat as IS NULL
+        actual_val.nil? 
       else # String, Integer
-        if actual_val.nil?
-          nil
-        else
-          actual_val == value
-        end
+        ret && actual_val == value
       end
     end
 
@@ -160,10 +153,5 @@ module ActiveRecord
       false
     end
     private_class_method :detect_boolean
-
-    def self.quote(str)
-      Arel::Nodes.build_quoted(str)
-    end
-    private_class_method :quote
   end
 end
