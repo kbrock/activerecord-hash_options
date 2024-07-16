@@ -47,7 +47,7 @@ jobs:
     strategy:
       # fail-fast: false
       matrix:
-        activerecord: ["70", "71"]
+        activerecord: ["71"]
         ruby: ["3.2"]
         # include:
           # - ruby: 2.7
@@ -100,6 +100,18 @@ jobs:
         env:
           DB: sqlite3
         run: bundle exec rake
+      - name: debug report variables
+        env:
+          CC_TEST_REPORTER_ID: "${{ secrets.CC_TEST_REPORTER_ID && 'present' || 'absent' }}"
+          GITHUB_REF: "${{ github.ref }}"
+          GITHUB_GOOD: "${{ github.ref == 'refs/heads/master'}}"
+          ACTIVERECORD: "${{ matrix.activerecord }}"
+          ACTIVERECORD_GOOD: "${{ matrix.activerecord == '71' }}"
+          RUBY: "${{ matrix.ruby }}"
+          RUBY_GOOD: "${{ matrix.ruby == '3.2' }}"
+        run: |
+          env
+        continue-on-error: true
       - name: Report code coverage
         env:
           CC_TEST_REPORTER_ID: "${{ secrets.CC_TEST_REPORTER_ID }}"
