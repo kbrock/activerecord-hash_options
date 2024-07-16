@@ -31,12 +31,20 @@ RSpec.describe ActiveRecord::HashOptions do
       expect(filter(collection, :value => gt(10))).to eq([big2])
     end
 
+    it "compares with gt null" do
+      expect(filter(collection, :value => gt(nil))).to be_empty
+    end
+
     it "compares with gt (long)" do
       expect(filter(collection, :value => ActiveRecord::HashOptions::GT(10))).to eq([big2])
     end
 
     it "compares with gte" do
       expect(filter(collection, :value => gte(10))).to match_array([big, big2])
+    end
+
+    it "compares with gte null" do
+      expect(filter(collection, :value => gte(nil))).to be_empty
     end
 
     it "compares with gte (long)" do
@@ -47,12 +55,20 @@ RSpec.describe ActiveRecord::HashOptions do
       expect(filter(collection, :value => lt(10))).to eq([small])
     end
 
+    it "compares with lt null" do
+      expect(filter(collection, :value => lt(nil))).to be_empty
+    end
+
     it "compares with lt (long)" do
       expect(filter(collection, :value => ActiveRecord::HashOptions::LT(10))).to eq([small])
     end
 
     it "compares with lte" do
       expect(filter(collection, :value => lte(10))).to match_array([small, big])
+    end
+
+    it "compares with lte null" do
+      expect(filter(collection, :value => lte(nil))).to be_empty
     end
 
     it "compares with lte (long)" do
@@ -161,6 +177,10 @@ RSpec.describe ActiveRecord::HashOptions do
 
     it "compares with insensitivity (long)" do
       expect(filter(collection, :name => ActiveRecord::HashOptions::INSENSITIVE('Big'))).to match_array([big, big2])
+    end
+
+    it "compares with insensitivity nil" do
+      expect(filter(collection, :name => insensitive(nil))).to eq([bad])
     end
 
     it "compares with ilike" do
