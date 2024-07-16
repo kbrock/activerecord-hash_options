@@ -151,10 +151,12 @@ module ActiveRecord
     end
 
     def self.detect_boolean(clause, connection, collation = nil)
+      # mysql uses collation
       clause = Arel::Nodes::SqlLiteral.new("#{clause.to_sql} COLLATE #{collation}") if collation
       sql = Arel::Nodes::SelectCore.new.tap { |sc| sc.projections << clause }
       [1, true].include?(connection.select_value(sql))
     rescue NotImplementedError
+      # sqlite does not support regular expressions
       false
     end
     private_class_method :detect_boolean
