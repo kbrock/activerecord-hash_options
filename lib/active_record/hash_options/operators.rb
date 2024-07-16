@@ -19,6 +19,10 @@ module ActiveRecord
         end
       end
 
+      def self.arel_proc(column, op, klass)
+        op.expression.nil? ? Arel::Nodes::False.new : klass.new(column, GenericOp.quote(op.expression, column))
+      end
+
       def cmp(val)
         return nil if val.nil? || expression.nil?
 
@@ -28,7 +32,7 @@ module ActiveRecord
 
     class GT < GenericOp
       def self.arel_proc
-        proc { |column, op| op.expression.nil? ? Arel::Nodes::False.new : Arel::Nodes::GreaterThan.new(column, GenericOp.quote(op.expression, column)) }
+        proc { |column, op| super(column, op, Arel::Nodes::GreaterThan) }
       end
 
       def call(val)
@@ -38,7 +42,7 @@ module ActiveRecord
 
     class LT < GenericOp
       def self.arel_proc
-        proc { |column, op| op.expression.nil? ? Arel::Nodes::False.new : Arel::Nodes::LessThan.new(column, GenericOp.quote(op.expression, column)) }
+        proc { |column, op| super(column, op, Arel::Nodes::LessThan) }
       end
 
       def call(val)
@@ -48,7 +52,7 @@ module ActiveRecord
 
     class GTE < GenericOp
       def self.arel_proc
-        proc { |column, op| op.expression.nil? ? Arel::Nodes::False.new : Arel::Nodes::GreaterThanOrEqual.new(column, GenericOp.quote(op.expression, column)) }
+        proc { |column, op| super(column, op, Arel::Nodes::GreaterThanOrEqual) }
       end
 
       def call(val)
@@ -58,7 +62,7 @@ module ActiveRecord
 
     class LTE < GenericOp
       def self.arel_proc
-        proc { |column, op| op.expression.nil? ? Arel::Nodes::False.new : Arel::Nodes::LessThanOrEqual.new(column, GenericOp.quote(op.expression, column)) }
+        proc { |column, op| super(column, op, Arel::Nodes::LessThanOrEqual) }
       end
 
       def call(val)
