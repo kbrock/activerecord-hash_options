@@ -16,7 +16,7 @@ module ActiveRecord
     cattr_accessor :sensitive_compare, :default => true
     # for an insensitive equality, we can use "col LIKE value" or "LOWER(col) = value.downcase"
     cattr_accessor :use_like_for_compare, :default => false
-    # use regular expressions (all but sqlite - but extensions can change this)
+    # use regular expressions (all but sqlite - thought sqlite does have an extension to support)
     cattr_accessor :use_regex, :default => true
 
     # convenience method to display detected values
@@ -42,13 +42,14 @@ module ActiveRecord
       self.sensitive_like = !detect_boolean(Arel::Nodes::Matches.new(la, ua, nil, true), connection, collation)
       # a like 'A' (please ignore case) - returns true if can ignore case
       self.insensitive_like = detect_boolean(Arel::Nodes::Matches.new(la, ua, nil, false), connection, collation)
-      # # a = 'A' - returns false if respects case
+      # a = 'A' - returns false if respects case
       self.sensitive_compare = !detect_boolean(Arel::Nodes::Equality.new(la, ua), connection, collation)
       # a ~ a - returns true if can use regular expressions
       self.use_regex = detect_boolean(Arel::Nodes::Regexp.new(la, la, true), connection, collation)
       self.use_like_for_compare = !sensitive_like
     end
 
+    # child classes also support the special operators
     def self.extended(mod)
       super
       ActiveRecord::HashOptions.register_my_handler(mod)
@@ -149,7 +150,7 @@ module ActiveRecord
       sql = Arel::Nodes::SelectCore.new.tap { |sc| sc.projections << clause }
       [1, true].include?(connection.select_value(sql))
     rescue NotImplementedError
-      # sqlite does not support regular expressions
+      # sqlite typically does not support regular expressions
       false
     end
     private_class_method :detect_boolean
